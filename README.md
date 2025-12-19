@@ -5,10 +5,11 @@ A production-ready, single-campus Learning Management System built with Java 21,
 ## Features
 
 - **User Authentication & Authorization**
-  - JWT-based authentication with 15-minute access tokens
-  - Refresh tokens stored in HttpOnly, Secure, SameSite=Strict cookies (30 days)
+  - JWT-based authentication (access token lifetime is configurable; see `app.security.jwt.access-token-validity-seconds`)
+  - Refresh tokens stored in an HttpOnly cookie (`refreshToken`) scoped to `/api/auth` (SameSite=Strict; Secure is enabled automatically when using HTTPS)
   - Role-based access control (Admin, Teacher, Student)
   - Password reset functionality
+  - Simple in-memory rate limiting on login (10 attempts per IP per 15 minutes)
 
 - **Course & Batch Management**
   - Create and manage courses
@@ -87,10 +88,11 @@ A production-ready, single-campus Learning Management System built with Java 21,
 
 #### Option A: Using XAMPP
 1. Start XAMPP and ensure MySQL is running
-2. Create a new database:
+2. (Optional) Create a new database:
    ```sql
    CREATE DATABASE campus_lms;
    ```
+   Note: the backend is configured with `createDatabaseIfNotExist=true`, so it can create `campus_lms` automatically if the MySQL user has permission.
 
 #### Option B: Using Docker
 ```bash
@@ -108,29 +110,32 @@ docker run --name mysql-lms -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=campus
    ```properties
    spring.datasource.url=jdbc:mysql://localhost:3306/campus_lms?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
    spring.datasource.username=root
-   spring.datasource.password=your_password
+   spring.datasource.password=
    ```
 
 3. Configure SMTP settings (optional for development):
    ```properties
-   spring.mail.host=smtp.gmail.com
-   spring.mail.port=587
-   spring.mail.username=your_email@gmail.com
-   spring.mail.password=your_app_password
-   spring.mail.properties.mail.smtp.auth=true
-   spring.mail.properties.mail.smtp.starttls.enable=true
+   # Defaults are set for a local dev SMTP server:
+   # spring.mail.host=localhost
+   # spring.mail.port=1025
+   #
+   # For Gmail/real SMTP, set these:
+   # spring.mail.host=smtp.gmail.com
+   # spring.mail.port=587
+   # spring.mail.username=your_email@gmail.com
+   # spring.mail.password=your_app_password
+   # spring.mail.properties.mail.smtp.auth=true
+   # spring.mail.properties.mail.smtp.starttls.enable=true
    ```
 
-4. Run the database schema:
+4. Start the backend (schema is managed by Hibernate via `spring.jpa.hibernate.ddl-auto=update`):
    ```bash
-   mysql -u root -p campus_lms < src/main/resources/schema.sql
-   mysql -u root -p campus_lms < src/main/resources/data.sql
-   ```
-
-5. Build and run the backend:
-   ```bash
-   mvn clean install
    mvn spring-boot:run
+   ```
+
+   On Windows (recommended), you can also use the Maven wrapper:
+   ```bash
+   .\mvnw.cmd spring-boot:run
    ```
 
    The backend will start on `http://localhost:8080`
@@ -156,7 +161,7 @@ docker run --name mysql-lms -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=campus
 
 ### 4. Default Credentials
 
-After running `data.sql`, the default admin user is created. The password is set by the `AdminUserInitializer` on first startup.
+On first startup, the default admin user is created by `AdminUserInitializer`.
 
 **Default Admin Credentials:**
 - Username: `admin@lms.local`
@@ -184,8 +189,7 @@ campus-lms/
 │   │   │       ├── application.properties
 │   │   │       ├── application-dev.properties
 │   │   │       ├── application-prod.properties
-│   │   │       ├── schema.sql
-│   │   │       └── data.sql
+│   │   │       └── (no schema/data SQL files; schema is managed by Hibernate)
 │   │   └── test/
 │   └── pom.xml
 ├── frontend/
@@ -265,10 +269,11 @@ Files are automatically deleted when the associated entity is deleted.
 
 ## Security
 
-- JWT access tokens expire after 15 minutes
-- Refresh tokens are stored in HttpOnly, Secure, SameSite=Strict cookies
+- JWT access token lifetime is configurable via `app.security.jwt.access-token-validity-seconds` (default in this repo: `90000`)
+- Refresh tokens are stored in an HttpOnly cookie (`refreshToken`) with `SameSite=Strict` and `path=/api/auth`
 - Refresh tokens expire after 30 days
-- Rate limiting on login endpoint (10 attempts per IP per 15 minutes)
+- Secure cookies are enabled automatically when the request is HTTPS (e.g. production behind TLS / reverse proxy)
+- Rate limiting on login endpoint (10 attempts per IP per 15 minutes, in-memory)
 - Password policy: minimum 8 characters, at least 1 letter and 1 number
 - All endpoints protected with `@PreAuthorize` annotations
 
