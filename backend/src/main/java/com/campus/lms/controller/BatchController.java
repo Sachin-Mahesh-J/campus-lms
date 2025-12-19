@@ -22,31 +22,32 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/batches")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
 public class BatchController {
 
     private final BatchService batchService;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','TEACHER','STUDENT')")
     public Page<BatchDto> listBatches(@RequestParam(value = "courseId", required = false) UUID courseId,
-                                      Pageable pageable) {
+            Pageable pageable) {
         return batchService.listBatches(courseId, pageable);
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
     public BatchDto createBatch(@Valid @RequestBody BatchRequest request) {
         return batchService.createBatch(request);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
     public BatchDto updateBatch(@PathVariable UUID id, @Valid @RequestBody BatchRequest request) {
         return batchService.updateBatch(id, request);
     }
 
     @org.springframework.web.bind.annotation.DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
     public void deleteBatch(@PathVariable UUID id) {
         batchService.deleteBatch(id);
     }
 }
-
-

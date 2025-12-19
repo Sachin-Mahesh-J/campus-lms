@@ -4,14 +4,17 @@ import com.campus.lms.dto.assignment.AssignmentDto;
 import com.campus.lms.dto.assignment.AssignmentRequest;
 import com.campus.lms.entity.Assignment;
 import com.campus.lms.entity.Batch;
+import com.campus.lms.entity.Enrollment;
 import com.campus.lms.entity.User;
 import com.campus.lms.mapper.AssignmentMapper;
 import com.campus.lms.repository.AssignmentRepository;
 import com.campus.lms.repository.BatchRepository;
+import com.campus.lms.repository.EnrollmentRepository;
 import com.campus.lms.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -28,11 +31,18 @@ public class AssignmentService {
     private final AssignmentRepository assignmentRepository;
     private final BatchRepository batchRepository;
     private final UserRepository userRepository;
+    private final EnrollmentRepository enrollmentRepository;
     private final AssignmentMapper assignmentMapper;
     private final AuditLogService auditLogService;
 
     @Transactional(readOnly = true)
     public Page<AssignmentDto> listAssignments(UUID batchId, String search, Pageable pageable) {
+        User currentUser = getCurrentUser();
+        if (currentUser.getRole() == User.Role.STUDENT) {
+            String q = StringUtils.hasText(search) ? search.toLowerCase(Locale.ROOT) : null;
+            return assignmentRepository.findVisibleAssignmentsForStudent(currentUser.getId(), batchId, q, pageable)
+                    .map(assignmentMapper::toDto);
+        }
         Page<Assignment> page;
         if (batchId != null) {
             Batch batch = batchRepository.findById(batchId)
@@ -75,8 +85,7 @@ public class AssignmentService {
                 "Assignment",
                 assignment.getId(),
                 assignment.getTitle(),
-                null
-        );
+                null);
         return assignmentMapper.toDto(assignment);
     }
 
@@ -111,8 +120,7 @@ public class AssignmentService {
                 "Assignment",
                 assignment.getId(),
                 assignment.getTitle(),
-                null
-        );
+                null);
         return assignmentMapper.toDto(assignment);
     }
 
@@ -127,14 +135,23 @@ public class AssignmentService {
                 "Assignment",
                 assignment.getId(),
                 assignment.getTitle(),
-                null
-        );
+                null);
     }
 
     @Transactional(readOnly = true)
     public AssignmentDto getAssignment(UUID id) {
+        User currentUser = getCurrentUser();
         Assignment assignment = assignmentRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Assignment not found"));
+        if (currentUser.getRole() == User.Role.STUDENT) {
+            boolean enrolled = enrollmentRepository.existsByStudentIdAndBatchIdAndStatus(
+                    currentUser.getId(),
+                    assignment.getBatch().getId(),
+                    Enrollment.Status.ACTIVE);
+            if (!enrolled) {
+                throw new AccessDeniedException("Access Denied");
+            }
+        }
         return assignmentMapper.toDto(assignment);
     }
 
@@ -145,4 +162,3 @@ public class AssignmentService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
     }
 }
-

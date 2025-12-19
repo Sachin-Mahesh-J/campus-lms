@@ -27,9 +27,9 @@ public class CourseController {
     private final CourseService courseService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','TEACHER')")
+    @PreAuthorize("hasAnyRole('ADMIN','TEACHER','STUDENT')")
     public Page<CourseDto> listCourses(@RequestParam(value = "search", required = false) String search,
-                                       Pageable pageable) {
+            Pageable pageable) {
         return courseService.listCourses(search, pageable);
     }
 
@@ -57,5 +57,3 @@ public class CourseController {
         courseService.archiveCourse(id);
     }
 }
-
-

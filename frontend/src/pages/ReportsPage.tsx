@@ -103,16 +103,19 @@ const ReportsPage: React.FC = () => {
   };
 
   return (
-    <div className="px-4 py-6 space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">Reports</h1>
+    <div className="space-y-6">
+      <div>
+        <h1 className="ui-display">Reports</h1>
+        <p className="ui-muted">Generate attendance and grades summaries.</p>
+      </div>
 
-      <div className="bg-white shadow sm:rounded-lg p-4 space-y-4">
-        <h2 className="text-lg font-medium text-gray-900">Filters</h2>
+      <div className="ui-card ui-card-pad space-y-4">
+        <h2 className="ui-h2">Filters</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Course</label>
+            <label className="ui-caption block mb-1">Course</label>
             <select
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+              className="ui-select"
               value={selectedCourseId}
               onFocus={ensureCoursesLoaded}
               onChange={(e) => {
@@ -129,9 +132,9 @@ const ReportsPage: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Batch</label>
+            <label className="ui-caption block mb-1">Batch</label>
             <select
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+              className="ui-select"
               value={selectedBatchId}
               onFocus={ensureBatchesLoaded}
               onChange={(e) => setSelectedBatchId(e.target.value)}
@@ -145,12 +148,10 @@ const ReportsPage: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Student ID (optional, UUID)
-            </label>
+            <label className="ui-caption block mb-1">Student ID (optional, UUID)</label>
             <input
               type="text"
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+              className="ui-input"
               value={studentId}
               onChange={(e) => setStudentId(e.target.value)}
               placeholder="Filter by single student UUID (optional)"
@@ -161,112 +162,94 @@ const ReportsPage: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Attendance report card */}
-        <div className="bg-white shadow sm:rounded-lg p-4 space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-lg font-medium text-gray-900">Attendance Report</h2>
+        <div className="ui-card ui-card-pad space-y-4">
+          <div className="ui-card-header">
+            <div>
+              <h2 className="ui-h2">Attendance report</h2>
+              <p className="ui-caption">Totals and rate based on your filter selection.</p>
+            </div>
             <form onSubmit={loadAttendanceReport}>
-              <button
-                type="submit"
-                disabled={loadingAttendance}
-                className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
-              >
-                {loadingAttendance ? 'Loading...' : 'Generate'}
+              <button type="submit" disabled={loadingAttendance} className="ui-btn-primary ui-btn-sm">
+                {loadingAttendance ? 'Loading…' : 'Generate'}
               </button>
             </form>
           </div>
           {attendanceReport ? (
             <div className="space-y-2">
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-gray-50 px-3 py-2 rounded-md">
-                  <div className="text-xs text-gray-500 uppercase">Total Records</div>
-                  <div className="text-lg font-semibold text-gray-900">
-                    {attendanceReport.totalRecords}
-                  </div>
+                <div className="rounded-card border border-borderSubtle bg-white/70 px-3 py-2">
+                  <div className="ui-caption uppercase">Total records</div>
+                  <div className="text-h2 font-semibold text-textPrimary">{attendanceReport.totalRecords}</div>
                 </div>
-                <div className="bg-gray-50 px-3 py-2 rounded-md">
-                  <div className="text-xs text-gray-500 uppercase">Attendance Rate</div>
-                  <div className="text-lg font-semibold text-gray-900">
-                    {attendanceReport.attendanceRate}%
-                  </div>
+                <div className="rounded-card border border-borderSubtle bg-white/70 px-3 py-2">
+                  <div className="ui-caption uppercase">Attendance rate</div>
+                  <div className="text-h2 font-semibold text-textPrimary">{attendanceReport.attendanceRate}%</div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-green-50 px-3 py-2 rounded-md">
-                  <div className="text-xs text-green-700 uppercase">Present</div>
-                  <div className="text-lg font-semibold text-green-900">
-                    {attendanceReport.present}
-                  </div>
+                <div className="rounded-card border border-borderSubtle bg-white/70 px-3 py-2">
+                  <div className="ui-caption uppercase">Present</div>
+                  <div className="text-h2 font-semibold text-textPrimary">{attendanceReport.present}</div>
                 </div>
-                <div className="bg-red-50 px-3 py-2 rounded-md">
-                  <div className="text-xs text-red-700 uppercase">Absent</div>
-                  <div className="text-lg font-semibold text-red-900">{attendanceReport.absent}</div>
+                <div className="rounded-card border border-borderSubtle bg-white/70 px-3 py-2">
+                  <div className="ui-caption uppercase">Absent</div>
+                  <div className="text-h2 font-semibold text-textPrimary">{attendanceReport.absent}</div>
                 </div>
-                <div className="bg-yellow-50 px-3 py-2 rounded-md">
-                  <div className="text-xs text-yellow-700 uppercase">Late</div>
-                  <div className="text-lg font-semibold text-yellow-900">{attendanceReport.late}</div>
+                <div className="rounded-card border border-borderSubtle bg-white/70 px-3 py-2">
+                  <div className="ui-caption uppercase">Late</div>
+                  <div className="text-h2 font-semibold text-textPrimary">{attendanceReport.late}</div>
                 </div>
-                <div className="bg-blue-50 px-3 py-2 rounded-md">
-                  <div className="text-xs text-blue-700 uppercase">Excused</div>
-                  <div className="text-lg font-semibold text-blue-900">
-                    {attendanceReport.excused}
-                  </div>
+                <div className="rounded-card border border-borderSubtle bg-white/70 px-3 py-2">
+                  <div className="ui-caption uppercase">Excused</div>
+                  <div className="text-h2 font-semibold text-textPrimary">{attendanceReport.excused}</div>
                 </div>
               </div>
             </div>
           ) : (
-            <p className="text-sm text-gray-500">
+            <p className="ui-muted">
               Configure filters above and click Generate to view attendance stats.
             </p>
           )}
         </div>
 
         {/* Grades report card */}
-        <div className="bg-white shadow sm:rounded-lg p-4 space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-lg font-medium text-gray-900">Grades Report</h2>
+        <div className="ui-card ui-card-pad space-y-4">
+          <div className="ui-card-header">
+            <div>
+              <h2 className="ui-h2">Grades report</h2>
+              <p className="ui-caption">Min, max, and average points for the selected scope.</p>
+            </div>
             <form onSubmit={loadGradesReport}>
-              <button
-                type="submit"
-                disabled={loadingGrades}
-                className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
-              >
-                {loadingGrades ? 'Loading...' : 'Generate'}
+              <button type="submit" disabled={loadingGrades} className="ui-btn-primary ui-btn-sm">
+                {loadingGrades ? 'Loading…' : 'Generate'}
               </button>
             </form>
           </div>
           {gradesReport ? (
             <div className="space-y-2">
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-gray-50 px-3 py-2 rounded-md">
-                  <div className="text-xs text-gray-500 uppercase">Total Grades</div>
-                  <div className="text-lg font-semibold text-gray-900">
-                    {gradesReport.totalGrades}
-                  </div>
+                <div className="rounded-card border border-borderSubtle bg-white/70 px-3 py-2">
+                  <div className="ui-caption uppercase">Total grades</div>
+                  <div className="text-h2 font-semibold text-textPrimary">{gradesReport.totalGrades}</div>
                 </div>
-                <div className="bg-indigo-50 px-3 py-2 rounded-md">
-                  <div className="text-xs text-indigo-700 uppercase">Average Points</div>
-                  <div className="text-lg font-semibold text-indigo-900">
-                    {gradesReport.averagePoints.toFixed(2)}
-                  </div>
+                <div className="rounded-card border border-borderSubtle bg-white/70 px-3 py-2">
+                  <div className="ui-caption uppercase">Average points</div>
+                  <div className="text-h2 font-semibold text-textPrimary">{gradesReport.averagePoints.toFixed(2)}</div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-green-50 px-3 py-2 rounded-md">
-                  <div className="text-xs text-green-700 uppercase">Max Points</div>
-                  <div className="text-lg font-semibold text-green-900">
-                    {gradesReport.maxPoints.toFixed(2)}
-                  </div>
+                <div className="rounded-card border border-borderSubtle bg-white/70 px-3 py-2">
+                  <div className="ui-caption uppercase">Max points</div>
+                  <div className="text-h2 font-semibold text-textPrimary">{gradesReport.maxPoints.toFixed(2)}</div>
                 </div>
-                <div className="bg-red-50 px-3 py-2 rounded-md">
-                  <div className="text-xs text-red-700 uppercase">Min Points</div>
-                  <div className="text-lg font-semibold text-red-900">
-                    {gradesReport.minPoints.toFixed(2)}
-                  </div>
+                <div className="rounded-card border border-borderSubtle bg-white/70 px-3 py-2">
+                  <div className="ui-caption uppercase">Min points</div>
+                  <div className="text-h2 font-semibold text-textPrimary">{gradesReport.minPoints.toFixed(2)}</div>
                 </div>
               </div>
             </div>
           ) : (
-            <p className="text-sm text-gray-500">
+            <p className="ui-muted">
               Configure filters above and click Generate to view grades statistics.
             </p>
           )}

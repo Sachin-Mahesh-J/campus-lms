@@ -132,16 +132,19 @@ const EnrollmentsPage: React.FC = () => {
   };
 
   return (
-    <div className="px-4 py-6 space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">Enrollments</h1>
+    <div className="space-y-6">
+      <div>
+        <h1 className="ui-display">Enrollments</h1>
+        <p className="ui-muted">Enroll students into a batch (manual search or bulk UUIDs).</p>
+      </div>
 
-      <div className="bg-white shadow sm:rounded-lg p-4 space-y-4">
-        <h2 className="text-lg font-medium text-gray-900">Select Batch</h2>
+      <div className="ui-card ui-card-pad space-y-4">
+        <h2 className="ui-h2">Select batch</h2>
         <div className="flex flex-wrap gap-4 items-end">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Course</label>
+            <label className="ui-caption block mb-1">Course</label>
             <select
-              className="mt-1 block w-64 border border-gray-300 rounded-md px-3 py-2"
+              className="ui-select w-72"
               value={selectedCourseId}
               onChange={(e) => {
                 setSelectedCourseId(e.target.value);
@@ -157,9 +160,9 @@ const EnrollmentsPage: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Batch</label>
+            <label className="ui-caption block mb-1">Batch</label>
             <select
-              className="mt-1 block w-64 border border-gray-300 rounded-md px-3 py-2"
+              className="ui-select w-72"
               value={selectedBatchId}
               onChange={(e) => setSelectedBatchId(e.target.value)}
             >
@@ -175,13 +178,14 @@ const EnrollmentsPage: React.FC = () => {
       </div>
 
       {selectedBatchId && (
-        <div className="bg-white shadow sm:rounded-lg p-4 space-y-6">
+        <div className="ui-card ui-card-pad space-y-6">
           <div>
-            <h2 className="text-lg font-medium text-gray-900 mb-2">Manual Enroll (by name/email)</h2>
+            <h2 className="ui-h2 mb-2">Manual enroll</h2>
+            <p className="ui-muted mb-3">Search by name or email, then enroll one student at a time.</p>
             <form onSubmit={handleStudentSearch} className="flex flex-wrap gap-2 items-center mb-3">
               <input
                 type="text"
-                className="flex-1 min-w-[200px] border border-gray-300 rounded-md px-3 py-2"
+                className="ui-input flex-1 min-w-[200px]"
                 placeholder="Search students by name or email"
                 value={studentSearch}
                 onChange={(e) => setStudentSearch(e.target.value)}
@@ -189,37 +193,37 @@ const EnrollmentsPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={searching}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+                className="ui-btn-primary"
               >
                 {searching ? 'Searching...' : 'Search'}
               </button>
             </form>
             {searchResults.length > 0 && (
-              <div className="border border-gray-200 rounded-md max-h-64 overflow-y-auto">
-                <table className="min-w-full divide-y divide-gray-200 text-sm">
-                  <thead className="bg-gray-50">
+              <div className="ui-table-wrap max-h-64 overflow-y-auto">
+                <table className="ui-table text-sm">
+                  <thead className="ui-thead">
                     <tr>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="ui-th px-3 py-2">
                         Name
                       </th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="ui-th px-3 py-2">
                         Email
                       </th>
-                      <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="ui-th px-3 py-2 text-right">
                         Action
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="divide-y divide-borderSubtle">
                     {searchResults.map((student) => (
                       <tr key={student.id}>
-                        <td className="px-3 py-2 text-gray-900">{student.fullName}</td>
-                        <td className="px-3 py-2 text-gray-500">{student.email}</td>
-                        <td className="px-3 py-2 text-right">
+                        <td className="ui-td px-3 py-2">{student.fullName}</td>
+                        <td className="ui-td-muted px-3 py-2">{student.email}</td>
+                        <td className="ui-td px-3 py-2 text-right">
                           <button
                             type="button"
                             onClick={() => enrollSingleStudent(student.id)}
-                            className="inline-flex items-center px-3 py-1 border border-indigo-300 text-xs rounded-md text-indigo-700 bg-white hover:bg-indigo-50"
+                            className="ui-btn-primary ui-btn-sm"
                           >
                             Enroll
                           </button>
@@ -231,19 +235,19 @@ const EnrollmentsPage: React.FC = () => {
               </div>
             )}
             {studentSearch && !searching && searchResults.length === 0 && (
-              <p className="text-xs text-gray-500 mt-1">No students found for that query.</p>
+              <p className="ui-caption mt-1">No students found for that query.</p>
             )}
           </div>
 
           <div>
-            <h2 className="text-lg font-medium text-gray-900 mb-2">Bulk Enroll by UUID (optional)</h2>
+            <h2 className="ui-h2 mb-2">Bulk enroll (UUIDs)</h2>
             <form onSubmit={handleBulkEnroll} className="space-y-3">
-              <p className="text-sm text-gray-600">
+              <p className="ui-muted">
                 Paste student UUIDs separated by spaces, commas, or newlines. The backend will
                 enroll them into the selected batch.
               </p>
               <textarea
-                className="w-full border border-gray-300 rounded-md px-3 py-2 h-24"
+                className="ui-textarea h-24"
                 value={bulkInput}
                 onChange={(e) => setBulkInput(e.target.value)}
                 placeholder="uuid-1 uuid-2 uuid-3 ..."
@@ -251,7 +255,7 @@ const EnrollmentsPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={savingBulk}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+                className="ui-btn-secondary"
               >
                 {savingBulk ? 'Enrolling...' : 'Enroll by UUIDs'}
               </button>
@@ -260,46 +264,50 @@ const EnrollmentsPage: React.FC = () => {
         </div>
       )}
 
-      <div className="bg-white shadow sm:rounded-lg p-4">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Current Enrollments</h2>
+      <div className="ui-card ui-card-pad space-y-4">
+        <h2 className="ui-h2">Current enrollments</h2>
         {loading ? (
-          <div className="text-center py-8">Loading...</div>
+          <div className="text-center py-8 ui-muted">Loading...</div>
         ) : !selectedBatchId ? (
-          <p className="text-sm text-gray-500">Select a batch to view enrollments.</p>
+          <p className="ui-muted">Select a batch to view enrollments.</p>
         ) : (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <div className="ui-table-wrap">
+            <table className="ui-table">
+              <thead className="ui-thead">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th">
                   Student
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th">
                   Status
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th">
                   Enrolled At
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y divide-borderSubtle">
               {enrollments.map((enrollment) => (
                 <tr key={enrollment.id}>
-                  <td className="px-4 py-2 text-sm text-gray-900">{enrollment.studentName}</td>
-                  <td className="px-4 py-2 text-sm text-gray-500">{enrollment.status}</td>
-                  <td className="px-4 py-2 text-sm text-gray-500">
+                  <td className="ui-td">{enrollment.studentName}</td>
+                  <td className="ui-td-muted">
+                    <span className="ui-pill">{String(enrollment.status).toLowerCase()}</span>
+                  </td>
+                  <td className="ui-td-muted">
                     {new Date(enrollment.enrolledAt).toLocaleString()}
                   </td>
                 </tr>
               ))}
               {enrollments.length === 0 && (
                 <tr>
-                  <td className="px-4 py-4 text-center text-sm text-gray-500" colSpan={3}>
+                  <td className="px-4 py-8 text-center text-sm text-textSecondary" colSpan={3}>
                     No enrollments yet for this batch.
                   </td>
                 </tr>
               )}
             </tbody>
-          </table>
+            </table>
+          </div>
         )}
       </div>
     </div>

@@ -80,48 +80,54 @@ const UsersPage: React.FC = () => {
   };
 
   return (
-    <div className="px-4 py-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Users</h1>
+    <div className="space-y-6">
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <h1 className="ui-display">Users</h1>
+          <p className="ui-muted">Create accounts and view existing users.</p>
+        </div>
       </div>
 
-      <div className="bg-white shadow sm:rounded-lg p-4 space-y-4">
-        <h2 className="text-lg font-medium text-gray-900">Create User</h2>
+      <div className="ui-card ui-card-pad space-y-4">
+        <div className="ui-card-header">
+          <h2 className="ui-h2">Create user</h2>
+          <span className="ui-pill">admin-only</span>
+        </div>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+            <label className="ui-caption block mb-1">Username</label>
             <input
               type="text"
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+              className="ui-input"
               value={form.username}
               onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))}
               placeholder="teacher1"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="ui-caption block mb-1">Email</label>
             <input
               type="email"
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+              className="ui-input"
               value={form.email}
               onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
               placeholder="teacher1@example.com"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+            <label className="ui-caption block mb-1">Full name</label>
             <input
               type="text"
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+              className="ui-input"
               value={form.fullName}
               onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))}
               placeholder="Teacher One"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+            <label className="ui-caption block mb-1">Role</label>
             <select
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+              className="ui-select"
               value={form.role}
               onChange={(e) => setForm((f) => ({ ...f, role: e.target.value as UserRole }))}
             >
@@ -131,10 +137,10 @@ const UsersPage: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <label className="ui-caption block mb-1">Password</label>
             <input
               type="password"
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+              className="ui-input"
               value={form.password}
               onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
               placeholder="At least 8 characters, letters and numbers"
@@ -144,7 +150,7 @@ const UsersPage: React.FC = () => {
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+              className="ui-btn-primary"
             >
               {saving ? 'Creating...' : 'Create User'}
             </button>
@@ -152,9 +158,9 @@ const UsersPage: React.FC = () => {
         </form>
       </div>
 
-      <div className="bg-white shadow sm:rounded-lg p-4 space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-lg font-medium text-gray-900">Existing Users</h2>
+      <div className="ui-card ui-card-pad space-y-4">
+        <div className="ui-card-header">
+          <h2 className="ui-h2">Existing users</h2>
           <input
             type="text"
             placeholder="Search by name or email..."
@@ -163,61 +169,65 @@ const UsersPage: React.FC = () => {
               setSearch(e.target.value);
               setPage(0);
             }}
-            className="w-64 px-3 py-2 border border-gray-300 rounded-md"
+            className="ui-input w-64"
           />
         </div>
 
         {loading ? (
-          <div className="text-center py-8">Loading...</div>
+          <div className="text-center py-8 ui-muted">Loading...</div>
         ) : (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <div className="ui-table-wrap">
+            <table className="ui-table">
+              <thead className="ui-thead">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th">
                   Name
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th">
                   Email
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th">
                   Role
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y divide-borderSubtle">
               {users.map((u) => (
                 <tr key={u.id}>
-                  <td className="px-4 py-2 text-sm text-gray-900">{u.fullName}</td>
-                  <td className="px-4 py-2 text-sm text-gray-500">{u.email}</td>
-                  <td className="px-4 py-2 text-sm text-gray-500">{u.role}</td>
+                  <td className="ui-td">{u.fullName}</td>
+                  <td className="ui-td-muted">{u.email}</td>
+                  <td className="ui-td-muted">
+                    <span className="ui-pill">{u.role.toLowerCase()}</span>
+                  </td>
                 </tr>
               ))}
               {users.length === 0 && (
                 <tr>
-                  <td className="px-4 py-4 text-center text-sm text-gray-500" colSpan={3}>
+                  <td className="px-4 py-8 text-center text-sm text-textSecondary" colSpan={3}>
                     No users found.
                   </td>
                 </tr>
               )}
             </tbody>
-          </table>
+            </table>
+          </div>
         )}
 
         <div className="mt-4 flex justify-between items-center">
           <button
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={page === 0}
-            className="px-4 py-2 border rounded-md disabled:opacity-50"
+            className="ui-btn-secondary ui-btn-sm"
           >
             Previous
           </button>
-          <span className="text-sm">
+          <span className="ui-caption">
             Page {totalPages === 0 ? 0 : page + 1} of {totalPages || 0}
           </span>
           <button
             onClick={() => setPage((p) => p + 1)}
             disabled={page >= totalPages - 1}
-            className="px-4 py-2 border rounded-md disabled:opacity-50"
+            className="ui-btn-secondary ui-btn-sm"
           >
             Next
           </button>

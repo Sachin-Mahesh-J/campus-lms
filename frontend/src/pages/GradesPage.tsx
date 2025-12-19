@@ -159,16 +159,19 @@ const GradesPage: React.FC = () => {
     grades.find((g) => g.submissionId === submissionId);
 
   return (
-    <div className="px-4 py-6 space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">Grades</h1>
+    <div className="space-y-6">
+      <div>
+        <h1 className="ui-display">Grades</h1>
+        <p className="ui-muted">Review submissions and record grades.</p>
+      </div>
 
-      <div className="bg-white shadow sm:rounded-lg p-4 space-y-4">
-        <h2 className="text-lg font-medium text-gray-900">Select Assignment</h2>
+      <div className="ui-card ui-card-pad space-y-4">
+        <h2 className="ui-h2">Select assignment</h2>
         <div className="flex flex-wrap gap-4 items-end">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Course</label>
+            <label className="ui-caption block mb-1">Course</label>
             <select
-              className="mt-1 block w-64 border border-gray-300 rounded-md px-3 py-2"
+              className="ui-select w-72"
               value={selectedCourseId}
               onChange={(e) => {
                 setSelectedCourseId(e.target.value);
@@ -185,9 +188,9 @@ const GradesPage: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Batch</label>
+            <label className="ui-caption block mb-1">Batch</label>
             <select
-              className="mt-1 block w-64 border border-gray-300 rounded-md px-3 py-2"
+              className="ui-select w-72"
               value={selectedBatchId}
               onChange={(e) => {
                 setSelectedBatchId(e.target.value);
@@ -203,9 +206,9 @@ const GradesPage: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Assignment</label>
+            <label className="ui-caption block mb-1">Assignment</label>
             <select
-              className="mt-1 block w-72 border border-gray-300 rounded-md px-3 py-2"
+              className="ui-select w-80"
               value={selectedAssignmentId}
               onChange={(e) => setSelectedAssignmentId(e.target.value)}
             >
@@ -221,55 +224,56 @@ const GradesPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white shadow sm:rounded-lg p-4">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Submissions</h2>
+      <div className="ui-card ui-card-pad space-y-4">
+        <h2 className="ui-h2">Submissions</h2>
         {!selectedAssignmentId ? (
-          <p className="text-sm text-gray-500">Select an assignment to view and grade submissions.</p>
+          <p className="ui-muted">Select an assignment to view and grade submissions.</p>
         ) : submissions.length === 0 ? (
-          <p className="text-sm text-gray-500">No submissions yet for this assignment.</p>
+          <p className="ui-muted">No submissions yet for this assignment.</p>
         ) : (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <div className="ui-table-wrap">
+            <table className="ui-table">
+              <thead className="ui-thead">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th">
                   Student
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th">
                   Submitted At
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th">
                   Late
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th">
                   Points
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th">
                   Feedback
                 </th>
-                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th text-right">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y divide-borderSubtle">
               {submissions.map((submission) => {
                 const edit = gradeEdits[submission.id] ?? { pointsAwarded: '', feedback: '' };
                 const existingGrade = getGradeForSubmission(submission.id);
                 return (
                   <tr key={submission.id}>
-                    <td className="px-4 py-2 text-sm text-gray-900">{submission.studentName}</td>
-                    <td className="px-4 py-2 text-sm text-gray-500">
+                    <td className="ui-td">{submission.studentName}</td>
+                    <td className="ui-td-muted">
                       {submission.submittedAt
                         ? new Date(submission.submittedAt).toLocaleString()
                         : ''}
                     </td>
-                    <td className="px-4 py-2 text-sm text-gray-500">
+                    <td className="ui-td-muted">
                       {submission.late ? 'Yes' : 'No'}
                     </td>
-                    <td className="px-4 py-2 text-sm text-gray-500">
+                    <td className="ui-td-muted">
                       <input
                         type="number"
-                        className="w-24 border border-gray-300 rounded-md px-2 py-1"
+                        className="ui-input w-24 px-3 py-1.5"
                         value={edit.pointsAwarded}
                         onChange={(e) =>
                           handleGradeChange(submission.id, 'pointsAwarded', e.target.value)
@@ -277,10 +281,10 @@ const GradesPage: React.FC = () => {
                         placeholder={existingGrade ? String(existingGrade.pointsAwarded) : ''}
                       />
                     </td>
-                    <td className="px-4 py-2 text-sm text-gray-500">
+                    <td className="ui-td-muted">
                       <input
                         type="text"
-                        className="w-full border border-gray-300 rounded-md px-2 py-1"
+                        className="ui-input w-full px-3 py-1.5"
                         value={edit.feedback}
                         onChange={(e) =>
                           handleGradeChange(submission.id, 'feedback', e.target.value)
@@ -288,11 +292,11 @@ const GradesPage: React.FC = () => {
                         placeholder={existingGrade?.feedback ?? ''}
                       />
                     </td>
-                    <td className="px-4 py-2 text-sm text-right">
+                    <td className="ui-td text-right">
                       <button
                         onClick={() => handleSaveGrade(submission.id)}
                         disabled={savingSubmissionId === submission.id}
-                        className="inline-flex items-center px-3 py-1 border border-indigo-300 text-xs rounded-md text-indigo-700 bg-white hover:bg-indigo-50 disabled:opacity-50"
+                        className="ui-btn-primary ui-btn-sm"
                       >
                         {savingSubmissionId === submission.id ? 'Saving...' : 'Save'}
                       </button>
@@ -301,7 +305,8 @@ const GradesPage: React.FC = () => {
                 );
               })}
             </tbody>
-          </table>
+            </table>
+          </div>
         )}
       </div>
     </div>

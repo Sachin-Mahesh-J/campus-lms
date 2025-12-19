@@ -129,20 +129,22 @@ const BatchesPage: React.FC = () => {
   };
 
   return (
-    <div className="px-4 py-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Batches</h1>
+    <div className="space-y-6">
+      <div>
+        <h1 className="ui-display">Batches</h1>
+        <p className="ui-muted">Create batches and filter by course.</p>
       </div>
 
-      <div className="bg-white shadow sm:rounded-lg p-4 space-y-4">
-        <h2 className="text-lg font-medium text-gray-900 mb-2">
-          {form.id ? 'Edit Batch' : 'Create Batch'}
-        </h2>
+      <div className="ui-card ui-card-pad space-y-4">
+        <div className="ui-card-header">
+          <h2 className="ui-h2">{form.id ? 'Edit batch' : 'Create batch'}</h2>
+          <span className="ui-pill">{form.id ? 'update' : 'new'}</span>
+        </div>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Course</label>
+            <label className="ui-caption block mb-1">Course</label>
             <select
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+              className="ui-select"
               value={form.courseId}
               onChange={(e) => setForm((f) => ({ ...f, courseId: e.target.value }))}
             >
@@ -155,20 +157,20 @@ const BatchesPage: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <label className="ui-caption block mb-1">Name</label>
             <input
               type="text"
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+              className="ui-input"
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               placeholder="2025-S1-Section-A"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Academic Year</label>
+            <label className="ui-caption block mb-1">Academic year</label>
             <input
               type="text"
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+              className="ui-input"
               value={form.academicYear}
               onChange={(e) => setForm((f) => ({ ...f, academicYear: e.target.value }))}
               placeholder="2025-2026"
@@ -176,12 +178,12 @@ const BatchesPage: React.FC = () => {
           </div>
           <div className="flex items-end space-x-2">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Semester</label>
+              <label className="ui-caption block mb-1">Semester</label>
               <input
                 type="number"
                 min={1}
                 max={8}
-                className="mt-1 block w-24 border border-gray-300 rounded-md px-3 py-2"
+                className="ui-input w-24"
                 value={form.semester}
                 onChange={(e) => setForm((f) => ({ ...f, semester: Number(e.target.value) }))}
               />
@@ -189,7 +191,7 @@ const BatchesPage: React.FC = () => {
             <button
               type="submit"
               disabled={saving}
-              className="ml-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+              className="ui-btn-primary ml-2"
             >
               {saving ? 'Saving...' : form.id ? 'Update' : 'Create'}
             </button>
@@ -197,7 +199,7 @@ const BatchesPage: React.FC = () => {
               <button
                 type="button"
                 onClick={resetForm}
-                className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                className="ui-btn-secondary"
               >
                 Cancel
               </button>
@@ -206,12 +208,12 @@ const BatchesPage: React.FC = () => {
         </form>
       </div>
 
-      <div className="bg-white shadow sm:rounded-lg p-4">
-        <div className="flex justify-between items-center mb-4">
+      <div className="ui-card ui-card-pad space-y-4">
+        <div className="ui-card-header">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Course</label>
+            <label className="ui-caption block mb-1">Filter by course</label>
             <select
-              className="mt-1 block w-64 border border-gray-300 rounded-md px-3 py-2"
+              className="ui-select w-72"
               value={selectedCourseId}
               onChange={(e) => {
                 setSelectedCourseId(e.target.value);
@@ -229,41 +231,42 @@ const BatchesPage: React.FC = () => {
         </div>
 
         {loading ? (
-          <div className="text-center py-8">Loading...</div>
+          <div className="text-center py-8 ui-muted">Loading...</div>
         ) : (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <div className="ui-table-wrap">
+            <table className="ui-table">
+              <thead className="ui-thead">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th">
                   Name
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th">
                   Academic Year
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th">
                   Semester
                 </th>
-                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th text-right">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y divide-borderSubtle">
               {batches.map((batch) => (
                 <tr key={batch.id}>
-                  <td className="px-4 py-2 text-sm text-gray-900">{batch.name}</td>
-                  <td className="px-4 py-2 text-sm text-gray-500">{batch.academicYear}</td>
-                  <td className="px-4 py-2 text-sm text-gray-500">{batch.semester}</td>
-                  <td className="px-4 py-2 text-sm text-right space-x-2">
+                  <td className="ui-td">{batch.name}</td>
+                  <td className="ui-td-muted">{batch.academicYear}</td>
+                  <td className="ui-td-muted">{batch.semester}</td>
+                  <td className="ui-td text-right space-x-2">
                     <button
                       onClick={() => handleEdit(batch)}
-                      className="inline-flex items-center px-3 py-1 border border-gray-300 text-xs rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                      className="ui-btn-secondary ui-btn-sm"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => handleDelete(batch.id)}
-                      className="inline-flex items-center px-3 py-1 border border-red-300 text-xs rounded-md text-red-700 bg-white hover:bg-red-50"
+                      className="ui-btn-danger ui-btn-sm"
                     >
                       Delete
                     </button>
@@ -272,30 +275,31 @@ const BatchesPage: React.FC = () => {
               ))}
               {batches.length === 0 && (
                 <tr>
-                  <td className="px-4 py-4 text-center text-sm text-gray-500" colSpan={4}>
+                  <td className="px-4 py-8 text-center text-sm text-textSecondary" colSpan={4}>
                     No batches found.
                   </td>
                 </tr>
               )}
             </tbody>
-          </table>
+            </table>
+          </div>
         )}
 
         <div className="mt-4 flex justify-between items-center">
           <button
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={page === 0}
-            className="px-4 py-2 border rounded-md disabled:opacity-50"
+            className="ui-btn-secondary ui-btn-sm"
           >
             Previous
           </button>
-          <span className="text-sm">
+          <span className="ui-caption">
             Page {totalPages === 0 ? 0 : page + 1} of {totalPages || 0}
           </span>
           <button
             onClick={() => setPage((p) => p + 1)}
             disabled={page >= totalPages - 1}
-            className="px-4 py-2 border rounded-md disabled:opacity-50"
+            className="ui-btn-secondary ui-btn-sm"
           >
             Next
           </button>

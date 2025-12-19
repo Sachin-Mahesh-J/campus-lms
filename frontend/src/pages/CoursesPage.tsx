@@ -82,6 +82,18 @@ const CoursesPage: React.FC = () => {
     setShowForm(true);
   };
 
+  const archiveCourse = async (course: Course) => {
+    if (course.archived) return;
+    if (!window.confirm(`Archive course "${course.code} - ${course.title}"?`)) return;
+    try {
+      await apiClient.post(`/courses/${course.id}/archive`);
+      toast.success('Course archived');
+      fetchCourses();
+    } catch {
+      toast.error('Failed to archive course');
+    }
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.code.trim() || !form.title.trim()) {
@@ -118,86 +130,87 @@ const CoursesPage: React.FC = () => {
   };
 
   return (
-    <div className="px-4 py-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Courses</h1>
-        <button
-          className="bg-indigo-600 text-white px-4 py-2 rounded-md"
-          onClick={openCreateForm}
-        >
-          Create Course
+    <div className="space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="ui-display">Courses</h1>
+          <p className="ui-muted">Create and manage courses across departments.</p>
+        </div>
+        <button className="ui-btn-primary" onClick={openCreateForm}>
+          Create course
         </button>
       </div>
 
       {showForm && (
-        <div className="bg-white shadow sm:rounded-lg p-4 space-y-4">
-          <h2 className="text-lg font-medium text-gray-900">
-            {form.id ? 'Edit Course' : 'Create Course'}
-          </h2>
+        <div className="ui-card ui-card-pad space-y-4">
+          <div className="ui-card-header">
+            <h2 className="ui-h2">{form.id ? 'Edit course' : 'Create course'}</h2>
+            <span className="ui-pill">{form.id ? 'update' : 'new'}</span>
+          </div>
           <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Code</label>
+              <label className="ui-caption block mb-1">Code</label>
               <input
                 type="text"
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                className="ui-input"
                 value={form.code}
                 onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))}
                 placeholder="CS101"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+              <label className="ui-caption block mb-1">Title</label>
               <input
                 type="text"
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                className="ui-input"
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                 placeholder="Introduction to Computer Science"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
+              <label className="ui-caption block mb-1">Department</label>
               <input
                 type="text"
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                className="ui-input"
                 value={form.department}
                 onChange={(e) => setForm((f) => ({ ...f, department: e.target.value }))}
                 placeholder="Computer Science"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Credits</label>
+              <label className="ui-caption block mb-1">Credits</label>
               <input
                 type="number"
                 step="0.5"
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                className="ui-input"
                 value={form.credits}
                 onChange={(e) => setForm((f) => ({ ...f, credits: e.target.value }))}
                 placeholder="3.0"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+              <label className="ui-caption block mb-1">Start date</label>
               <input
                 type="date"
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                className="ui-input"
                 value={form.startDate}
                 onChange={(e) => setForm((f) => ({ ...f, startDate: e.target.value }))}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+              <label className="ui-caption block mb-1">End date</label>
               <input
                 type="date"
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                className="ui-input"
                 value={form.endDate}
                 onChange={(e) => setForm((f) => ({ ...f, endDate: e.target.value }))}
               />
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <label className="ui-caption block mb-1">Description</label>
               <textarea
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 h-24"
+                className="ui-textarea h-24"
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 placeholder="Optional description for this course"
@@ -207,14 +220,14 @@ const CoursesPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                className="ui-btn-secondary"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={saving}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+                className="ui-btn-primary"
               >
                 {saving ? 'Saving...' : form.id ? 'Update Course' : 'Create Course'}
               </button>
@@ -229,31 +242,41 @@ const CoursesPage: React.FC = () => {
           placeholder="Search courses..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-md"
+          className="ui-input"
         />
       </div>
       {loading ? (
-        <div className="text-center py-12">Loading...</div>
+        <div className="ui-card ui-card-pad text-center">Loading...</div>
       ) : (
-        <div className="bg-white shadow overflow-hidden sm:rounded-md">
-          <ul className="divide-y divide-gray-200">
+        <div className="ui-card overflow-hidden">
+          <ul className="divide-y divide-borderSubtle">
             {courses.map((course) => (
               <li key={course.id}>
-                <div className="px-4 py-4 sm:px-6 flex items-center justify-between">
+                <div className="px-4 py-4 sm:px-6 flex items-center justify-between gap-4">
                   <div>
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-semibold text-textPrimary">
                       {course.code} - {course.title}
                     </div>
-                    <div className="text-sm text-gray-500">
-                      {course.department} {course.archived ? '(Archived)' : ''}
+                    <div className="text-sm text-textSecondary flex items-center gap-2">
+                      <span>{course.department}</span>
+                      {course.archived ? <span className="ui-pill">archived</span> : null}
                     </div>
                   </div>
-                  <div className="flex items-center space-x-3 text-sm text-gray-500">
-                    <span>{course.credits != null ? `${course.credits} credits` : ''}</span>
+                  <div className="flex items-center gap-3 text-sm text-textSecondary">
+                    {course.credits != null ? <span className="ui-pill">{course.credits} credits</span> : null}
+                    {!course.archived ? (
+                      <button
+                        type="button"
+                        onClick={() => archiveCourse(course)}
+                        className="ui-btn-secondary ui-btn-sm"
+                      >
+                        Archive
+                      </button>
+                    ) : null}
                     <button
                       type="button"
                       onClick={() => openEditForm(course)}
-                      className="inline-flex items-center px-3 py-1 border border-gray-300 text-xs rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                      className="ui-btn-secondary ui-btn-sm"
                     >
                       Edit
                     </button>
@@ -263,7 +286,7 @@ const CoursesPage: React.FC = () => {
             ))}
             {courses.length === 0 && (
               <li>
-                <div className="px-4 py-6 text-center text-sm text-gray-500">
+                <div className="px-4 py-10 text-center text-sm text-textSecondary">
                   No courses found.
                 </div>
               </li>
@@ -275,17 +298,17 @@ const CoursesPage: React.FC = () => {
         <button
           onClick={() => setPage((p) => Math.max(0, p - 1))}
           disabled={page === 0}
-          className="px-4 py-2 border rounded-md disabled:opacity-50"
+          className="ui-btn-secondary ui-btn-sm"
         >
           Previous
         </button>
-        <span className="py-2">
+        <span className="py-2 ui-caption">
           Page {page + 1} of {totalPages || 1}
         </span>
         <button
           onClick={() => setPage((p) => p + 1)}
           disabled={page >= totalPages - 1}
-          className="px-4 py-2 border rounded-md disabled:opacity-50"
+          className="ui-btn-secondary ui-btn-sm"
         >
           Next
         </button>

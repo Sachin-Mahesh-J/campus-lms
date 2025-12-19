@@ -30,6 +30,12 @@ public class CourseService {
 
     @Transactional(readOnly = true)
     public Page<CourseDto> listCourses(String search, Pageable pageable) {
+        User currentUser = getCurrentUser();
+        if (currentUser.getRole() == User.Role.STUDENT) {
+            String q = StringUtils.hasText(search) ? search.toLowerCase(Locale.ROOT) : null;
+            return courseRepository.findEnrolledCourses(currentUser.getId(), q, pageable)
+                    .map(courseMapper::toDto);
+        }
         Page<Course> page;
         if (StringUtils.hasText(search)) {
             String q = search.toLowerCase(Locale.ROOT);
@@ -61,8 +67,7 @@ public class CourseService {
                 "Course",
                 course.getId(),
                 course.getCode(),
-                null
-        );
+                null);
         return courseMapper.toDto(course);
     }
 
@@ -85,8 +90,7 @@ public class CourseService {
                 "Course",
                 course.getId(),
                 course.getCode(),
-                null
-        );
+                null);
         return courseMapper.toDto(course);
     }
 
@@ -103,8 +107,7 @@ public class CourseService {
                 "Course",
                 course.getId(),
                 course.getCode(),
-                null
-        );
+                null);
     }
 
     @Transactional(readOnly = true)
@@ -121,5 +124,3 @@ public class CourseService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
     }
 }
-
-

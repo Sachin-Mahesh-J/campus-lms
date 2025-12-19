@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -27,6 +28,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -78,7 +80,7 @@ public class AuthService {
                 .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
 
         String accessToken = jwtTokenService.generateAccessToken(user);
-        createAndSetRefreshToken(user, httpResponse);
+        createAndSetRefreshToken(user, httpRequest, httpResponse);
 
         auditLogService.record(
                 user,
@@ -99,7 +101,7 @@ public class AuthService {
     }
 
     @Transactional
-    public LoginResponse refresh(String refreshToken, HttpServletResponse response) {
+    public LoginResponse refresh(String refreshToken, HttpServletRequest request, HttpServletResponse response) {
         if (!StringUtils.hasText(refreshToken)) {
             throw new BadCredentialsException("Missing refresh token");
         }
@@ -113,7 +115,7 @@ public class AuthService {
         refreshTokenRepository.save(token);
 
         String accessToken = jwtTokenService.generateAccessToken(user);
-        createAndSetRefreshToken(user, response);
+        createAndSetRefreshToken(user, request, response);
         return LoginResponse.builder()
                 .accessToken(accessToken)
                 .expiresInSeconds(jwtTokenService.getAccessTokenValiditySeconds())
@@ -202,20 +204,46 @@ public class AuthService {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(tokenPayload.getBytes());
     }
 
-    private void createAndSetRefreshToken(User user, HttpServletResponse response) {
-        String tokenValue = UUID.randomUUID().toString();
+    public void clearRefreshTokenCookie(HttpServletRequest request, HttpServletResponse response) {
+        boolean secure = isSecureRequest(request);
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(secure)
+                .path("/api/auth")
+                .sameSite("Strict")
+                .maxAge(0)
+                .build();
+        response.addHeader("Set-Cookie", cookie.toString());
+    }
+
+    private void createAndSetRefreshToken(User user, HttpServletRequest request, HttpServletResponse response) {
+        String tokenValue = Objects.requireNonNull(UUID.randomUUID().toString(), "tokenValue");
         Instant expiry = Instant.now().plus(refreshTokenValidityDays, ChronoUnit.DAYS);
-        RefreshToken refreshToken = RefreshToken.builder()
+        RefreshToken refreshToken = Objects.requireNonNull(RefreshToken.builder()
                 .user(user)
                 .token(tokenValue)
                 .expiryDate(expiry)
                 .revoked(false)
+                .build(), "refreshToken");
+        refreshTokenRepository.save(Objects.requireNonNull(refreshToken, "refreshToken"));
+        boolean secure = isSecureRequest(request);
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", tokenValue)
+                .httpOnly(true)
+                .secure(secure)
+                .path("/api/auth")
+                .sameSite("Strict")
+                .maxAge(refreshTokenValidityDays * 24L * 60 * 60)
                 .build();
-        refreshTokenRepository.save(refreshToken);
+        response.addHeader("Set-Cookie", cookie.toString());
+    }
 
-        String cookie = "refreshToken=" + tokenValue +
-                "; HttpOnly; Secure; SameSite=Strict; Path=/api/auth; Max-Age=" + (refreshTokenValidityDays * 24L * 60 * 60);
-        response.addHeader("Set-Cookie", cookie);
+    private boolean isSecureRequest(HttpServletRequest request) {
+        if (request == null) return false;
+        if (request.isSecure()) return true;
+        String xfProto = request.getHeader("X-Forwarded-Proto");
+        if (StringUtils.hasText(xfProto) && xfProto.toLowerCase().contains("https")) return true;
+        String xfSsl = request.getHeader("X-Forwarded-Ssl");
+        return StringUtils.hasText(xfSsl) && xfSsl.equalsIgnoreCase("on");
     }
 
     private String resolveClientIp(HttpServletRequest request) {

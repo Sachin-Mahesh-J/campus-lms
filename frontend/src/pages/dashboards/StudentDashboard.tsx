@@ -23,51 +23,39 @@ const StudentDashboard: React.FC = () => {
   }, []);
 
   if (loading) {
-    return <div className="text-center py-12">Loading...</div>;
+    return <div className="ui-card ui-card-pad text-center">Loading...</div>;
   }
 
   return (
-    <div className="px-4 py-6">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Student Dashboard</h1>
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="text-2xl font-bold text-gray-900">{dashboard?.totalCourses || 0}</div>
-            <div className="text-sm font-medium text-gray-500">Enrolled Courses</div>
-          </div>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="ui-display">Student dashboard</h1>
+          <p className="ui-muted">Stay on top of your coursework and deadlines.</p>
         </div>
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="text-2xl font-bold text-gray-900">{dashboard?.totalAssignments || 0}</div>
-            <div className="text-sm font-medium text-gray-500">Total Assignments</div>
-          </div>
-        </div>
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="text-2xl font-bold text-gray-900">{dashboard?.pendingSubmissions || 0}</div>
-            <div className="text-sm font-medium text-gray-500">Pending Submissions</div>
-          </div>
-        </div>
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="text-2xl font-bold text-gray-900">{dashboard?.completedAssignments || 0}</div>
-            <div className="text-sm font-medium text-gray-500">Completed Assignments</div>
-          </div>
-        </div>
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="text-2xl font-bold text-gray-900">{dashboard?.attendanceRate || 0}%</div>
-            <div className="text-sm font-medium text-gray-500">Attendance Rate</div>
-          </div>
+        <div className="flex flex-wrap gap-2">
+          <Link to="/assignments" className="ui-btn-primary">
+            Assignments
+          </Link>
+          <Link to="/submissions" className="ui-btn-secondary">
+            Submissions
+          </Link>
         </div>
       </div>
-      <div className="mt-6 space-x-4">
-        <Link to="/assignments" className="text-indigo-600 hover:text-indigo-500">
-          View Assignments →
-        </Link>
-        <Link to="/submissions" className="text-indigo-600 hover:text-indigo-500">
-          My Submissions →
-        </Link>
+
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {[
+          { label: 'Enrolled courses', value: dashboard?.totalCourses || 0 },
+          { label: 'Total assignments', value: dashboard?.totalAssignments || 0 },
+          { label: 'Pending submissions', value: dashboard?.pendingSubmissions || 0 },
+          { label: 'Completed assignments', value: dashboard?.completedAssignments || 0 },
+          { label: 'Attendance rate', value: `${dashboard?.attendanceRate || 0}%` },
+        ].map((stat) => (
+          <div key={stat.label} className="ui-card ui-card-pad">
+            <div className="text-3xl font-bold text-textPrimary">{stat.value}</div>
+            <div className="ui-caption mt-1">{stat.label}</div>
+          </div>
+        ))}
       </div>
     </div>
   );

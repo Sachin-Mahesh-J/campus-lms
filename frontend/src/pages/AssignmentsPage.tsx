@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import apiClient from '../api/client';
-import { Assignment, Batch, Course, PageResponse } from '../types';
+import { Assignment, Batch, Course, PageResponse, Submission } from '../types';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 
@@ -40,6 +40,16 @@ const AssignmentsPage: React.FC = () => {
   const [submitContent, setSubmitContent] = useState('');
   const [submitFile, setSubmitFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const [submissionsModal, setSubmissionsModal] = useState<{
+    open: boolean;
+    assignment?: Assignment;
+  }>({ open: false });
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [submissionsPage, setSubmissionsPage] = useState(0);
+  const [submissionsTotalPages, setSubmissionsTotalPages] = useState(0);
+  const [submissionsLoading, setSubmissionsLoading] = useState(false);
+  const [downloadingSubmissionId, setDownloadingSubmissionId] = useState<string | null>(null);
 
   const isTeacher = user?.role === 'TEACHER' || user?.role === 'ADMIN';
 
@@ -203,17 +213,97 @@ const AssignmentsPage: React.FC = () => {
     }
   };
 
-  return (
-    <div className="px-4 py-6 space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">Assignments</h1>
+  const loadAssignmentSubmissions = async (assignmentId: string, pageToLoad: number) => {
+    setSubmissionsLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: pageToLoad.toString(),
+        size: '20',
+        sort: 'submittedAt,desc',
+      });
+      const response = await apiClient.get<PageResponse<Submission>>(
+        `/assignments/${assignmentId}/submissions?${params.toString()}`
+      );
+      setSubmissions(response.data.content);
+      setSubmissionsTotalPages(response.data.totalPages);
+    } catch {
+      toast.error('Failed to load submissions');
+    } finally {
+      setSubmissionsLoading(false);
+    }
+  };
 
-      <div className="bg-white shadow sm:rounded-lg p-4 space-y-4">
-        <h2 className="text-lg font-medium text-gray-900">Filters</h2>
+  const openSubmissionsModal = async (assignment: Assignment) => {
+    setSubmissionsModal({ open: true, assignment });
+    setSubmissions([]);
+    setSubmissionsPage(0);
+    setSubmissionsTotalPages(0);
+    await loadAssignmentSubmissions(assignment.id, 0);
+  };
+
+  const closeSubmissionsModal = () => {
+    setSubmissionsModal({ open: false });
+    setSubmissions([]);
+    setSubmissionsPage(0);
+    setSubmissionsTotalPages(0);
+  };
+
+  const getFilenameFromContentDisposition = (headerValue?: string) => {
+    if (!headerValue) return null;
+    const match = /filename="([^"]+)"/i.exec(headerValue);
+    if (!match?.[1]) return null;
+    try {
+      return decodeURIComponent(match[1]);
+    } catch {
+      return match[1];
+    }
+  };
+
+  const downloadSubmissionFile = async (submission: Submission) => {
+    if (!submission.filePath) {
+      toast.error('No file attached for this submission');
+      return;
+    }
+    setDownloadingSubmissionId(submission.id);
+    try {
+      const response = await apiClient.get(`/assignments/submissions/${submission.id}/download`, {
+        responseType: 'blob',
+      });
+
+      const contentDisposition = (response.headers?.['content-disposition'] as string | undefined) ?? undefined;
+      const filename =
+        getFilenameFromContentDisposition(contentDisposition) ??
+        `${submission.assignmentTitle}-${submission.studentName}-attempt${submission.submissionNumber}.bin`;
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      toast.error('Failed to download submission file');
+    } finally {
+      setDownloadingSubmissionId(null);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="ui-display">Assignments</h1>
+        <p className="ui-muted">Filter by course/batch, then create, submit, or review work.</p>
+      </div>
+
+      <div className="ui-card ui-card-pad space-y-4">
+        <h2 className="ui-h2">Filters</h2>
         <div className="flex flex-wrap gap-4 items-end">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Course</label>
+            <label className="ui-caption block mb-1">Course</label>
             <select
-              className="mt-1 block w-64 border border-gray-300 rounded-md px-3 py-2"
+              className="ui-select w-72"
               value={selectedCourseId}
               onChange={(e) => {
                 setSelectedCourseId(e.target.value);
@@ -229,9 +319,9 @@ const AssignmentsPage: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Batch</label>
+            <label className="ui-caption block mb-1">Batch</label>
             <select
-              className="mt-1 block w-64 border border-gray-300 rounded-md px-3 py-2"
+              className="ui-select w-72"
               value={selectedBatchId}
               onChange={(e) => {
                 setSelectedBatchId(e.target.value);
@@ -250,15 +340,16 @@ const AssignmentsPage: React.FC = () => {
       </div>
 
       {isTeacher && (
-        <div className="bg-white shadow sm:rounded-lg p-4 space-y-4">
-          <h2 className="text-lg font-medium text-gray-900">
-            {form.id ? 'Edit Assignment' : 'Create Assignment'}
-          </h2>
+        <div className="ui-card ui-card-pad space-y-4">
+          <div className="ui-card-header">
+            <h2 className="ui-h2">{form.id ? 'Edit assignment' : 'Create assignment'}</h2>
+            <span className="ui-pill">{form.id ? 'update' : 'new'}</span>
+          </div>
           <form onSubmit={handleSubmitForm} className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Batch</label>
+              <label className="ui-caption block mb-1">Batch</label>
               <select
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                className="ui-select"
                 value={form.batchId}
                 onChange={(e) => setForm((f) => ({ ...f, batchId: e.target.value }))}
               >
@@ -271,31 +362,31 @@ const AssignmentsPage: React.FC = () => {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+              <label className="ui-caption block mb-1">Title</label>
               <input
                 type="text"
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                className="ui-input"
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                 placeholder="Assignment title"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+              <label className="ui-caption block mb-1">Due date</label>
               <input
                 type="datetime-local"
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                className="ui-input"
                 value={form.dueDate}
                 onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))}
               />
             </div>
             <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Max Points</label>
+                <label className="ui-caption block mb-1">Max points</label>
                 <input
                   type="number"
                   min={0}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                  className="ui-input"
                   value={form.maxPoints}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, maxPoints: Number(e.target.value) || 0 }))
@@ -310,9 +401,9 @@ const AssignmentsPage: React.FC = () => {
                   onChange={(e) =>
                     setForm((f) => ({ ...f, allowResubmission: e.target.checked }))
                   }
-                  className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                  className="ui-checkbox"
                 />
-                <label htmlFor="allowResubmission" className="text-sm text-gray-700">
+                <label htmlFor="allowResubmission" className="text-sm text-textSecondary">
                   Allow resubmission
                 </label>
               </div>
@@ -320,7 +411,7 @@ const AssignmentsPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+                  className="ui-btn-primary"
                 >
                   {saving ? 'Saving...' : form.id ? 'Update Assignment' : 'Create Assignment'}
                 </button>
@@ -328,7 +419,7 @@ const AssignmentsPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                    className="ui-btn-secondary"
                   >
                     Cancel
                   </button>
@@ -336,9 +427,9 @@ const AssignmentsPage: React.FC = () => {
               </div>
             </div>
             <div className="md:col-span-3">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <label className="ui-caption block mb-1">Description</label>
               <textarea
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 h-24"
+                className="ui-textarea h-24"
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 placeholder="Optional description or instructions"
@@ -348,52 +439,49 @@ const AssignmentsPage: React.FC = () => {
         </div>
       )}
 
-      <div className="bg-white shadow sm:rounded-lg p-4">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Assignments</h2>
+      <div className="ui-card ui-card-pad space-y-4">
+        <h2 className="ui-h2">Assignments</h2>
         {loading ? (
-          <div className="text-center py-8">Loading...</div>
+          <div className="text-center py-8 ui-muted">Loading...</div>
         ) : (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Title
-                </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Batch
-                </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Due Date
-                </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Max Points
-                </th>
-                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+          <div className="ui-table-wrap">
+            <table className="ui-table">
+              <thead className="ui-thead">
+                <tr>
+                  <th className="ui-th">Title</th>
+                  <th className="ui-th">Batch</th>
+                  <th className="ui-th">Due date</th>
+                  <th className="ui-th">Max points</th>
+                  <th className="ui-th text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-borderSubtle">
               {assignments.map((assignment) => (
                 <tr key={assignment.id}>
-                  <td className="px-4 py-2 text-sm text-gray-900">{assignment.title}</td>
-                  <td className="px-4 py-2 text-sm text-gray-500">{assignment.batchName}</td>
-                  <td className="px-4 py-2 text-sm text-gray-500">
+                  <td className="ui-td">{assignment.title}</td>
+                  <td className="ui-td-muted">{assignment.batchName}</td>
+                  <td className="ui-td-muted">
                     {assignment.dueDate ? new Date(assignment.dueDate).toLocaleString() : ''}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-500">{assignment.maxPoints}</td>
-                  <td className="px-4 py-2 text-sm text-right space-x-2">
+                  <td className="ui-td-muted">{assignment.maxPoints}</td>
+                  <td className="ui-td text-right space-x-2">
                     {isTeacher && (
                       <>
                         <button
+                          onClick={() => openSubmissionsModal(assignment)}
+                          className="ui-btn-secondary ui-btn-sm"
+                        >
+                          Submissions
+                        </button>
+                        <button
                           onClick={() => handleEdit(assignment)}
-                          className="inline-flex items-center px-3 py-1 border border-gray-300 text-xs rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                          className="ui-btn-secondary ui-btn-sm"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDelete(assignment.id)}
-                          className="inline-flex items-center px-3 py-1 border border-red-300 text-xs rounded-md text-red-700 bg-white hover:bg-red-50"
+                          className="ui-btn-danger ui-btn-sm"
                         >
                           Delete
                         </button>
@@ -402,7 +490,7 @@ const AssignmentsPage: React.FC = () => {
                     {user?.role === 'STUDENT' && (
                       <button
                         onClick={() => openSubmitModal(assignment)}
-                        className="inline-flex items-center px-3 py-1 border border-indigo-300 text-xs rounded-md text-indigo-700 bg-white hover:bg-indigo-50"
+                        className="ui-btn-primary ui-btn-sm"
                       >
                         Submit
                       </button>
@@ -412,30 +500,31 @@ const AssignmentsPage: React.FC = () => {
               ))}
               {assignments.length === 0 && (
                 <tr>
-                  <td className="px-4 py-4 text-center text-sm text-gray-500" colSpan={5}>
+                  <td className="px-4 py-8 text-center text-sm text-textSecondary" colSpan={5}>
                     No assignments found.
                   </td>
                 </tr>
               )}
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          </div>
         )}
 
         <div className="mt-4 flex justify-between items-center">
           <button
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={page === 0}
-            className="px-4 py-2 border rounded-md disabled:opacity-50"
+            className="ui-btn-secondary ui-btn-sm"
           >
             Previous
           </button>
-          <span className="text-sm">
+          <span className="ui-caption">
             Page {totalPages === 0 ? 0 : page + 1} of {totalPages || 0}
           </span>
           <button
             onClick={() => setPage((p) => p + 1)}
             disabled={page >= totalPages - 1}
-            className="px-4 py-2 border rounded-md disabled:opacity-50"
+            className="ui-btn-secondary ui-btn-sm"
           >
             Next
           </button>
@@ -443,50 +532,170 @@ const AssignmentsPage: React.FC = () => {
       </div>
 
       {submitModal.open && submitModal.assignment && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg max-w-lg w-full p-6 space-y-4">
-            <h2 className="text-lg font-medium text-gray-900">
-              Submit: {submitModal.assignment.title}
-            </h2>
+        <div className="ui-backdrop">
+          <div className="ui-modal space-y-4">
+            <h2 className="ui-h2">Submit: {submitModal.assignment.title}</h2>
             <form onSubmit={handleSubmitAssignment} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Answer (optional)
-                </label>
+                <label className="ui-caption block mb-1">Answer (optional)</label>
                 <textarea
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 h-24"
+                  className="ui-textarea h-24"
                   value={submitContent}
                   onChange={(e) => setSubmitContent(e.target.value)}
                   placeholder="Write your answer or leave empty if uploading a file only"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  File (optional)
-                </label>
+                <label className="ui-caption block mb-1">File (optional)</label>
                 <input
                   type="file"
                   onChange={(e) => setSubmitFile(e.target.files?.[0] ?? null)}
-                  className="block w-full text-sm text-gray-500"
+                  className="block w-full text-sm text-textSecondary"
                 />
               </div>
               <div className="flex justify-end space-x-2">
                 <button
                   type="button"
                   onClick={() => setSubmitModal({ open: false })}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                  className="ui-btn-secondary"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+                  className="ui-btn-primary"
                 >
                   {submitting ? 'Submitting...' : 'Submit'}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {submissionsModal.open && submissionsModal.assignment && (
+        <div className="ui-backdrop">
+          <div className="ui-card ui-card-pad w-full max-w-6xl space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="ui-h2">Submissions: {submissionsModal.assignment.title}</h2>
+                <div className="ui-caption">
+                  Batch: {submissionsModal.assignment.batchName}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={closeSubmissionsModal}
+                className="ui-btn-secondary ui-btn-sm"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="rounded-card border border-borderSubtle bg-white/70 p-3 flex items-center justify-between">
+              <div className="ui-caption">
+                Page {submissionsTotalPages === 0 ? 0 : submissionsPage + 1} of {submissionsTotalPages || 0}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={async () => {
+                    const next = Math.max(0, submissionsPage - 1);
+                    setSubmissionsPage(next);
+                    await loadAssignmentSubmissions(submissionsModal.assignment!.id, next);
+                  }}
+                  disabled={submissionsPage === 0 || submissionsLoading}
+                  className="ui-btn-secondary ui-btn-sm"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={async () => {
+                    const next = submissionsPage + 1;
+                    setSubmissionsPage(next);
+                    await loadAssignmentSubmissions(submissionsModal.assignment!.id, next);
+                  }}
+                  disabled={submissionsPage >= submissionsTotalPages - 1 || submissionsLoading}
+                  className="ui-btn-secondary ui-btn-sm"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+
+            {submissionsLoading ? (
+              <div className="text-center py-8 ui-muted">Loading...</div>
+            ) : (
+              <div className="ui-table-wrap">
+                <table className="ui-table">
+                  <thead className="ui-thead">
+                    <tr>
+                      <th className="ui-th">
+                        Student
+                      </th>
+                      <th className="ui-th">
+                        Submitted At
+                      </th>
+                      <th className="ui-th">
+                        Late
+                      </th>
+                      <th className="ui-th">
+                        Attempt
+                      </th>
+                      <th className="ui-th">
+                        Answer
+                      </th>
+                      <th className="ui-th text-right">
+                        File
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-borderSubtle">
+                    {submissions.map((s) => (
+                      <tr key={s.id}>
+                        <td className="ui-td">{s.studentName}</td>
+                        <td className="ui-td-muted">
+                          {s.submittedAt ? new Date(s.submittedAt).toLocaleString() : ''}
+                        </td>
+                        <td className="ui-td-muted">
+                          <span className="ui-pill">{s.late ? 'late' : 'on time'}</span>
+                        </td>
+                        <td className="ui-td-muted">#{s.submissionNumber}</td>
+                        <td className="ui-td-muted max-w-md">
+                          {s.contentText ? (
+                            <div title={s.contentText} className="truncate">
+                              {s.contentText}
+                            </div>
+                          ) : (
+                            <span className="text-textMuted">—</span>
+                          )}
+                        </td>
+                        <td className="ui-td text-right">
+                          {s.filePath ? (
+                            <button
+                              onClick={() => downloadSubmissionFile(s)}
+                              disabled={downloadingSubmissionId === s.id}
+                              className="ui-btn-secondary ui-btn-sm"
+                            >
+                              {downloadingSubmissionId === s.id ? 'Downloading...' : 'Download'}
+                            </button>
+                          ) : (
+                            <span className="text-xs text-textMuted">No file</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                    {submissions.length === 0 && (
+                      <tr>
+                        <td className="px-4 py-8 text-center text-sm text-textSecondary" colSpan={6}>
+                          No submissions yet.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       )}

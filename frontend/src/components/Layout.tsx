@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, Link, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Layout: React.FC = () => {
@@ -19,6 +19,8 @@ const Layout: React.FC = () => {
         { to: '/courses', label: 'Courses' },
         { to: '/batches', label: 'Batches' },
         { to: '/enrollments', label: 'Enrollments' },
+        { to: '/notifications', label: 'Notifications' },
+        { to: '/attendance', label: 'Attendance' },
         { to: '/reports', label: 'Reports' },
       ];
     }
@@ -29,9 +31,11 @@ const Layout: React.FC = () => {
         { to: '/batches', label: 'Batches' },
         { to: '/assignments', label: 'Assignments' },
         { to: '/sessions', label: 'Sessions' },
+        { to: '/attendance', label: 'Attendance' },
         { to: '/materials', label: 'Materials' },
         { to: '/grades', label: 'Grades' },
         { to: '/reports', label: 'Reports' },
+        { to: '/notifications', label: 'Notifications' },
       ];
     }
     if (user?.role === 'STUDENT') {
@@ -40,45 +44,71 @@ const Layout: React.FC = () => {
         { to: '/assignments', label: 'Assignments' },
         { to: '/submissions', label: 'My Submissions' },
         { to: '/materials', label: 'Materials' },
+        { to: '/notifications', label: 'Notifications' },
       ];
     }
     return [];
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
-                <h1 className="text-xl font-bold text-indigo-600">Campus LMS</h1>
-              </div>
-              <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                {getNavLinks().map((link) => (
-                  <Link
-                    key={link.to}
-                    to={link.to}
-                    className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
+    <div className="ui-page">
+      <header className="ui-container pt-8">
+        <div className="ui-card ui-card-pad">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center justify-between gap-4">
+              <Link to="/" className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-brand text-white flex items-center justify-center shadow-cardLight">
+                  <span className="text-sm font-bold">CL</span>
+                </div>
+                <div className="leading-tight">
+                  <div className="text-h2 font-semibold text-textPrimary">Campus LMS</div>
+                  <div className="ui-caption">
+                    {user?.role ? (
+                      <span className="ui-pill">
+                        <span className="h-2 w-2 rounded-full bg-accentYellow" />
+                        {user.role.toLowerCase()}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              </Link>
+
+              <div className="flex items-center gap-2 lg:hidden">
+                <span className="ui-caption">{user?.fullName}</span>
+                <button onClick={handleLogout} className="ui-btn-secondary ui-btn-sm">
+                  Logout
+                </button>
               </div>
             </div>
-            <div className="flex items-center">
-              <span className="text-gray-700 mr-4">{user?.fullName}</span>
-              <button
-                onClick={handleLogout}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-              >
+
+            <nav className="flex items-center gap-2 overflow-x-auto pb-1">
+              {getNavLinks().map((link) => (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  className={({ isActive }) =>
+                    [
+                      'ui-btn ui-btn-sm whitespace-nowrap',
+                      isActive ? 'bg-brandSoft text-textPrimary' : 'ui-btn-ghost',
+                    ].join(' ')
+                  }
+                >
+                  {link.label}
+                </NavLink>
+              ))}
+            </nav>
+
+            <div className="hidden lg:flex items-center gap-3">
+              <span className="ui-muted">{user?.fullName}</span>
+              <button onClick={handleLogout} className="ui-btn-secondary">
                 Logout
               </button>
             </div>
           </div>
         </div>
-      </nav>
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      </header>
+
+      <main className="ui-container py-8">
         <Outlet />
       </main>
     </div>

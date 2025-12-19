@@ -23,88 +23,39 @@ const AdminDashboard: React.FC = () => {
   }, []);
 
   if (loading) {
-    return <div className="text-center py-12">Loading...</div>;
+    return <div className="ui-card ui-card-pad text-center">Loading...</div>;
   }
 
   return (
-    <div className="px-4 py-6">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Admin Dashboard</h1>
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="text-2xl font-bold text-gray-900">{dashboard?.totalUsers || 0}</div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Total Users</dt>
-                </dl>
-              </div>
-            </div>
-          </div>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="ui-display">Admin dashboard</h1>
+          <p className="ui-muted">A quick overview of users, courses, and activity.</p>
         </div>
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="text-2xl font-bold text-gray-900">{dashboard?.totalCourses || 0}</div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Total Courses</dt>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="text-2xl font-bold text-gray-900">{dashboard?.totalBatches || 0}</div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Total Batches</dt>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="text-2xl font-bold text-gray-900">{dashboard?.totalStudents || 0}</div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Total Students</dt>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="text-2xl font-bold text-gray-900">{dashboard?.totalTeachers || 0}</div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Total Teachers</dt>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="mt-6">
-        <Link to="/courses" className="text-indigo-600 hover:text-indigo-500">
-          Manage Courses →
+        <Link to="/courses" className="ui-btn-primary">
+          Manage courses
         </Link>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {[
+          { label: 'Total users', value: dashboard?.totalUsers || 0 },
+          { label: 'Total courses', value: dashboard?.totalCourses || 0 },
+          { label: 'Total batches', value: dashboard?.totalBatches || 0 },
+          { label: 'Total students', value: dashboard?.totalStudents || 0 },
+          { label: 'Total teachers', value: dashboard?.totalTeachers || 0 },
+        ].map((stat) => (
+          <div key={stat.label} className="ui-card ui-card-pad">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="text-3xl font-bold text-textPrimary">{stat.value}</div>
+                <div className="ui-caption mt-1">{stat.label}</div>
+              </div>
+              <div className="ui-pill ui-pill-yellow">live</div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

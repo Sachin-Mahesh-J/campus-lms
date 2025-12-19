@@ -119,16 +119,19 @@ const AttendancePage: React.FC = () => {
   };
 
   return (
-    <div className="px-4 py-6 space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">Attendance</h1>
+    <div className="space-y-6">
+      <div>
+        <h1 className="ui-display">Attendance</h1>
+        <p className="ui-muted">Select a session and record attendance in bulk.</p>
+      </div>
 
-      <div className="bg-white shadow sm:rounded-lg p-4 space-y-4">
-        <h2 className="text-lg font-medium text-gray-900">Select Session</h2>
+      <div className="ui-card ui-card-pad space-y-4">
+        <h2 className="ui-h2">Select session</h2>
         <div className="flex flex-wrap gap-4 items-end">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Course</label>
+            <label className="ui-caption block mb-1">Course</label>
             <select
-              className="mt-1 block w-64 border border-gray-300 rounded-md px-3 py-2"
+              className="ui-select w-72"
               value={selectedCourseId}
               onChange={(e) => {
                 setSelectedCourseId(e.target.value);
@@ -145,9 +148,9 @@ const AttendancePage: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Batch</label>
+            <label className="ui-caption block mb-1">Batch</label>
             <select
-              className="mt-1 block w-64 border border-gray-300 rounded-md px-3 py-2"
+              className="ui-select w-72"
               value={selectedBatchId}
               onChange={(e) => {
                 setSelectedBatchId(e.target.value);
@@ -163,9 +166,9 @@ const AttendancePage: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Session</label>
+            <label className="ui-caption block mb-1">Session</label>
             <select
-              className="mt-1 block w-72 border border-gray-300 rounded-md px-3 py-2"
+              className="ui-select w-80"
               value={selectedSessionId}
               onChange={(e) => setSelectedSessionId(e.target.value)}
             >
@@ -180,55 +183,53 @@ const AttendancePage: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white shadow sm:rounded-lg p-4">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Record Attendance</h2>
+      <div className="ui-card ui-card-pad space-y-4">
+        <h2 className="ui-h2">Record attendance</h2>
         {!selectedBatchId || !selectedSessionId ? (
-          <p className="text-sm text-gray-500">Select a batch and session to record attendance.</p>
+          <p className="ui-muted">Select a batch and session to record attendance.</p>
         ) : enrollments.length === 0 ? (
-          <p className="text-sm text-gray-500">No students enrolled in this batch.</p>
+          <p className="ui-muted">No students enrolled in this batch.</p>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Student
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {enrollments.map((enrollment) => (
-                  <tr key={enrollment.id}>
-                    <td className="px-4 py-2 text-sm text-gray-900">{enrollment.studentName}</td>
-                    <td className="px-4 py-2 text-sm text-gray-500">
-                      <select
-                        className="border border-gray-300 rounded-md px-2 py-1"
-                        value={statusMap[enrollment.studentId] || 'PRESENT'}
-                        onChange={(e) =>
-                          handleStatusChange(
-                            enrollment.studentId,
-                            e.target.value as AttendanceStatus
-                          )
-                        }
-                      >
-                        <option value="PRESENT">Present</option>
-                        <option value="ABSENT">Absent</option>
-                        <option value="LATE">Late</option>
-                        <option value="EXCUSED">Excused</option>
-                      </select>
-                    </td>
+            <div className="ui-table-wrap">
+              <table className="ui-table">
+                <thead className="ui-thead">
+                  <tr>
+                    <th className="ui-th">Student</th>
+                    <th className="ui-th">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-borderSubtle">
+                  {enrollments.map((enrollment) => (
+                    <tr key={enrollment.id}>
+                      <td className="ui-td">{enrollment.studentName}</td>
+                      <td className="ui-td">
+                        <select
+                          className="ui-select w-44 px-3 py-1.5"
+                          value={statusMap[enrollment.studentId] || 'PRESENT'}
+                          onChange={(e) =>
+                            handleStatusChange(
+                              enrollment.studentId,
+                              e.target.value as AttendanceStatus
+                            )
+                          }
+                        >
+                          <option value="PRESENT">Present</option>
+                          <option value="ABSENT">Absent</option>
+                          <option value="LATE">Late</option>
+                          <option value="EXCUSED">Excused</option>
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             <div className="flex justify-end">
               <button
                 type="submit"
                 disabled={saving}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+                className="ui-btn-primary"
               >
                 {saving ? 'Saving...' : 'Save Attendance'}
               </button>

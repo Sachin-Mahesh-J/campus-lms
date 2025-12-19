@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import apiClient from '../api/client';
 import { Batch, ClassSession, Course, PageResponse } from '../types';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 
 const ClassSessionsPage: React.FC = () => {
+  const { user } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState<string>('');
@@ -13,6 +15,8 @@ const ClassSessionsPage: React.FC = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const canManage = user?.role === 'ADMIN' || user?.role === 'TEACHER';
 
   const [form, setForm] = useState<{
     batchId: string;
@@ -124,16 +128,19 @@ const ClassSessionsPage: React.FC = () => {
   };
 
   return (
-    <div className="px-4 py-6 space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">Class Sessions</h1>
+    <div className="space-y-6">
+      <div>
+        <h1 className="ui-display">Class sessions</h1>
+        <p className="ui-muted">Create sessions and view the schedule for a batch.</p>
+      </div>
 
-      <div className="bg-white shadow sm:rounded-lg p-4 space-y-4">
-        <h2 className="text-lg font-medium text-gray-900">Filters</h2>
+      <div className="ui-card ui-card-pad space-y-4">
+        <h2 className="ui-h2">Filters</h2>
         <div className="flex flex-wrap gap-4 items-end">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Course</label>
+            <label className="ui-caption block mb-1">Course</label>
             <select
-              className="mt-1 block w-64 border border-gray-300 rounded-md px-3 py-2"
+              className="ui-select w-72"
               value={selectedCourseId}
               onChange={(e) => {
                 setSelectedCourseId(e.target.value);
@@ -149,9 +156,9 @@ const ClassSessionsPage: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Batch</label>
+            <label className="ui-caption block mb-1">Batch</label>
             <select
-              className="mt-1 block w-64 border border-gray-300 rounded-md px-3 py-2"
+              className="ui-select w-72"
               value={selectedBatchId}
               onChange={(e) => {
                 setSelectedBatchId(e.target.value);
@@ -170,131 +177,137 @@ const ClassSessionsPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white shadow sm:rounded-lg p-4 space-y-4">
-        <h2 className="text-lg font-medium text-gray-900">Create Class Session</h2>
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Batch</label>
-            <select
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-              value={form.batchId}
-              onChange={(e) => setForm((f) => ({ ...f, batchId: e.target.value }))}
-            >
-              <option value="">Select batch</option>
-              {batches.map((batch) => (
-                <option key={batch.id} value={batch.id}>
-                  {batch.name} ({batch.academicYear}, S{batch.semester})
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-            <input
-              type="text"
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-              value={form.title}
-              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-              placeholder="Lecture 1"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-            <input
-              type="date"
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-              value={form.sessionDate}
-              onChange={(e) => setForm((f) => ({ ...f, sessionDate: e.target.value }))}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
-            <input
-              type="time"
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-              value={form.startTime}
-              onChange={(e) => setForm((f) => ({ ...f, startTime: e.target.value }))}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
-            <input
-              type="time"
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-              value={form.endTime}
-              onChange={(e) => setForm((f) => ({ ...f, endTime: e.target.value }))}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-            <input
-              type="text"
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-              value={form.location}
-              onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
-              placeholder="Room 101"
-            />
-          </div>
-          <div className="flex items-center mt-6">
-            <button
-              type="submit"
-              disabled={saving}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
-            >
-              {saving ? 'Creating...' : 'Create Session'}
-            </button>
-          </div>
-        </form>
+      <div className="ui-card ui-card-pad space-y-4">
+        <h2 className="ui-h2">Create class session</h2>
+        {canManage ? (
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            <div>
+              <label className="ui-caption block mb-1">Batch</label>
+              <select
+                className="ui-select"
+                value={form.batchId}
+                onChange={(e) => setForm((f) => ({ ...f, batchId: e.target.value }))}
+              >
+                <option value="">Select batch</option>
+                {batches.map((batch) => (
+                  <option key={batch.id} value={batch.id}>
+                    {batch.name} ({batch.academicYear}, S{batch.semester})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="ui-caption block mb-1">Title</label>
+              <input
+                type="text"
+                className="ui-input"
+                value={form.title}
+                onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                placeholder="Lecture 1"
+              />
+            </div>
+            <div>
+              <label className="ui-caption block mb-1">Date</label>
+              <input
+                type="date"
+                className="ui-input"
+                value={form.sessionDate}
+                onChange={(e) => setForm((f) => ({ ...f, sessionDate: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="ui-caption block mb-1">Start time</label>
+              <input
+                type="time"
+                className="ui-input"
+                value={form.startTime}
+                onChange={(e) => setForm((f) => ({ ...f, startTime: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="ui-caption block mb-1">End time</label>
+              <input
+                type="time"
+                className="ui-input"
+                value={form.endTime}
+                onChange={(e) => setForm((f) => ({ ...f, endTime: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="ui-caption block mb-1">Location</label>
+              <input
+                type="text"
+                className="ui-input"
+                value={form.location}
+                onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
+                placeholder="Room 101"
+              />
+            </div>
+            <div className="flex items-center mt-6">
+              <button
+                type="submit"
+                disabled={saving}
+                className="ui-btn-primary"
+              >
+                {saving ? 'Creating...' : 'Create Session'}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <p className="ui-muted">Students can view session schedules, but only teachers/admins can create sessions.</p>
+        )}
       </div>
 
-      <div className="bg-white shadow sm:rounded-lg p-4">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Class Sessions</h2>
+      <div className="ui-card ui-card-pad space-y-4">
+        <h2 className="ui-h2">Sessions</h2>
         {loading ? (
-          <div className="text-center py-8">Loading...</div>
+          <div className="text-center py-8 ui-muted">Loading...</div>
         ) : !selectedBatchId ? (
-          <p className="text-sm text-gray-500">Select a batch to view sessions.</p>
+          <p className="ui-muted">Select a batch to view sessions.</p>
         ) : (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <div className="ui-table-wrap">
+            <table className="ui-table">
+              <thead className="ui-thead">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th">
                   Title
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th">
                   Date
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th">
                   Time
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th">
                   Location
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y divide-borderSubtle">
               {sessions.map((session) => (
                 <tr key={session.id}>
-                  <td className="px-4 py-2 text-sm text-gray-900">{session.title}</td>
-                  <td className="px-4 py-2 text-sm text-gray-500">
+                  <td className="ui-td">{session.title}</td>
+                  <td className="ui-td-muted">
                     {session.sessionDate
                       ? new Date(session.sessionDate).toLocaleDateString()
                       : ''}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-500">
+                  <td className="ui-td-muted">
                     {session.startTime} - {session.endTime}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-500">{session.location}</td>
+                  <td className="ui-td-muted">{session.location}</td>
                 </tr>
               ))}
               {sessions.length === 0 && (
                 <tr>
-                  <td className="px-4 py-4 text-center text-sm text-gray-500" colSpan={4}>
+                  <td className="px-4 py-8 text-center text-sm text-textSecondary" colSpan={4}>
                     No sessions found.
                   </td>
                 </tr>
               )}
             </tbody>
-          </table>
+            </table>
+          </div>
         )}
 
         {selectedBatchId && (
@@ -302,17 +315,17 @@ const ClassSessionsPage: React.FC = () => {
             <button
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               disabled={page === 0}
-              className="px-4 py-2 border rounded-md disabled:opacity-50"
+              className="ui-btn-secondary ui-btn-sm"
             >
               Previous
             </button>
-            <span className="text-sm">
+            <span className="ui-caption">
               Page {totalPages === 0 ? 0 : page + 1} of {totalPages || 0}
             </span>
             <button
               onClick={() => setPage((p) => p + 1)}
               disabled={page >= totalPages - 1}
-              className="px-4 py-2 border rounded-md disabled:opacity-50"
+              className="ui-btn-secondary ui-btn-sm"
             >
               Next
             </button>

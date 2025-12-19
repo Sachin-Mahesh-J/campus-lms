@@ -20,6 +20,7 @@ import MaterialsPage from './pages/MaterialsPage';
 import GradesPage from './pages/GradesPage';
 import ReportsPage from './pages/ReportsPage';
 import UsersPage from './pages/UsersPage';
+import NotificationsPage from './pages/NotificationsPage';
 import Layout from './components/Layout';
 
 const AppRoutes: React.FC = () => {
@@ -48,12 +49,13 @@ const AppRoutes: React.FC = () => {
         <Route path="batches" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><BatchesPage /></ProtectedRoute>} />
         <Route path="enrollments" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><EnrollmentsPage /></ProtectedRoute>} />
         <Route path="assignments" element={<ProtectedRoute><AssignmentsPage /></ProtectedRoute>} />
-        <Route path="submissions" element={<ProtectedRoute><SubmissionsPage /></ProtectedRoute>} />
+        <Route path="submissions" element={<ProtectedRoute allowedRoles={['STUDENT']}><SubmissionsPage /></ProtectedRoute>} />
         <Route path="sessions" element={<ProtectedRoute><ClassSessionsPage /></ProtectedRoute>} />
         <Route path="attendance" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><AttendancePage /></ProtectedRoute>} />
         <Route path="materials" element={<ProtectedRoute><MaterialsPage /></ProtectedRoute>} />
         <Route path="grades" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><GradesPage /></ProtectedRoute>} />
         <Route path="reports" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><ReportsPage /></ProtectedRoute>} />
+        <Route path="notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
         <Route index element={<Navigate to={getDefaultRoute()} replace />} />
       </Route>
     </Routes>

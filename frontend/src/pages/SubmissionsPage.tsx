@@ -35,75 +35,80 @@ const SubmissionsPage: React.FC = () => {
   };
 
   return (
-    <div className="px-4 py-6 space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">My Submissions</h1>
+    <div className="space-y-6">
+      <div>
+        <h1 className="ui-display">My submissions</h1>
+        <p className="ui-muted">A history of your assignment submissions.</p>
+      </div>
 
-      <div className="bg-white shadow sm:rounded-lg p-4">
+      <div className="ui-card ui-card-pad space-y-4">
         {loading ? (
-          <div className="text-center py-8">Loading...</div>
+          <div className="text-center py-8 ui-muted">Loading...</div>
         ) : (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <div className="ui-table-wrap">
+            <table className="ui-table">
+              <thead className="ui-thead">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th">
                   Assignment
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th">
                   Submitted At
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th">
                   Late
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th">
                   Attempt
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y divide-borderSubtle">
               {submissions.map((submission) => (
                 <tr key={submission.id}>
-                  <td className="px-4 py-2 text-sm text-gray-900">
+                  <td className="ui-td">
                     {submission.assignmentTitle}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-500">
+                  <td className="ui-td-muted">
                     {submission.submittedAt
                       ? new Date(submission.submittedAt).toLocaleString()
                       : ''}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-500">
-                    {submission.late ? 'Yes' : 'No'}
+                  <td className="ui-td-muted">
+                    <span className="ui-pill">{submission.late ? 'late' : 'on time'}</span>
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-500">
+                  <td className="ui-td-muted">
                     #{submission.submissionNumber}
                   </td>
                 </tr>
               ))}
               {submissions.length === 0 && (
                 <tr>
-                  <td className="px-4 py-4 text-center text-sm text-gray-500" colSpan={4}>
+                  <td className="px-4 py-8 text-center text-sm text-textSecondary" colSpan={4}>
                     You have not submitted any assignments yet.
                   </td>
                 </tr>
               )}
             </tbody>
-          </table>
+            </table>
+          </div>
         )}
 
         <div className="mt-4 flex justify-between items-center">
           <button
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={page === 0}
-            className="px-4 py-2 border rounded-md disabled:opacity-50"
+            className="ui-btn-secondary ui-btn-sm"
           >
             Previous
           </button>
-          <span className="text-sm">
+          <span className="ui-caption">
             Page {totalPages === 0 ? 0 : page + 1} of {totalPages || 0}
           </span>
           <button
             onClick={() => setPage((p) => p + 1)}
             disabled={page >= totalPages - 1}
-            className="px-4 py-2 border rounded-md disabled:opacity-50"
+            className="ui-btn-secondary ui-btn-sm"
           >
             Next
           </button>

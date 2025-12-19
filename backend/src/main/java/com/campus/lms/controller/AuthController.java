@@ -5,7 +5,6 @@ import com.campus.lms.dto.auth.LoginRequest;
 import com.campus.lms.dto.auth.LoginResponse;
 import com.campus.lms.dto.auth.ResetPasswordRequest;
 import com.campus.lms.service.AuthService;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -35,14 +34,14 @@ public class AuthController {
     public ResponseEntity<LoginResponse> refresh(HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = null;
         if (request.getCookies() != null) {
-            for (Cookie cookie : request.getCookies()) {
+            for (var cookie : request.getCookies()) {
                 if ("refreshToken".equals(cookie.getName())) {
                     refreshToken = cookie.getValue();
                     break;
                 }
             }
         }
-        LoginResponse body = authService.refresh(refreshToken, response);
+        LoginResponse body = authService.refresh(refreshToken, request, response);
         return ResponseEntity.ok(body);
     }
 
@@ -50,7 +49,7 @@ public class AuthController {
     public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = null;
         if (request.getCookies() != null) {
-            for (Cookie cookie : request.getCookies()) {
+            for (var cookie : request.getCookies()) {
                 if ("refreshToken".equals(cookie.getName())) {
                     refreshToken = cookie.getValue();
                     break;
@@ -58,13 +57,7 @@ public class AuthController {
             }
         }
         authService.logout(refreshToken);
-        Cookie cookie = new Cookie("refreshToken", "");
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setPath("/api/auth");
-        cookie.setMaxAge(0);
-        cookie.setAttribute("SameSite", "Strict");
-        response.addCookie(cookie);
+        authService.clearRefreshTokenCookie(request, response);
         return ResponseEntity.ok().build();
     }
 

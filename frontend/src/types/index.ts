@@ -136,6 +136,18 @@ export interface Dashboard {
   totalTeachers?: number;
 }
 
+export interface Notification {
+  id: string;
+  recipientId: string;
+  type: string;
+  title: string;
+  message: string;
+  payload?: Record<string, any>;
+  sentAt: string;
+  delivered?: boolean;
+  retryCount?: number;
+}
+
 export interface PageResponse<T> {
   content: T[];
   totalElements: number;

@@ -11,6 +11,18 @@ const apiClient = axios.create({
 
 let refreshPromise: Promise<string> | null = null;
 
+const isAuthEndpoint = (url?: string) => {
+  if (!url) return false;
+  // Axios config.url is the path passed to apiClient (e.g. "/auth/login")
+  return (
+    url.includes('/auth/login') ||
+    url.includes('/auth/refresh') ||
+    url.includes('/auth/logout') ||
+    url.includes('/auth/forgot-password') ||
+    url.includes('/auth/reset-password')
+  );
+};
+
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('accessToken');
@@ -29,7 +41,9 @@ apiClient.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Don't attempt refresh token flow for auth endpoints (especially /auth/login),
+    // otherwise invalid credentials can look like "nothing happened" due to a redirect loop.
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint(originalRequest.url)) {
       originalRequest._retry = true;
 
       try {
@@ -50,18 +64,25 @@ apiClient.interceptors.response.use(
 
         return apiClient(originalRequest);
       } catch (refreshError) {
+        refreshPromise = null;
         localStorage.removeItem('accessToken');
-        window.location.href = '/login';
+        if (!window.location.pathname.startsWith('/login')) {
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       }
     }
 
-    if (error.response?.status === 403) {
-      toast.error('You do not have permission to perform this action');
-    } else if (error.response?.status >= 500) {
-      toast.error('Server error. Please try again later.');
-    } else if (error.response?.data && typeof error.response.data === 'object' && 'message' in error.response.data) {
-      toast.error((error.response.data as { message: string }).message);
+    // For auth endpoints, let the calling page/context decide how to display errors
+    // (avoids duplicate toast messages on login/forgot/reset flows).
+    if (!isAuthEndpoint(originalRequest.url)) {
+      if (error.response?.status === 403) {
+        toast.error('You do not have permission to perform this action');
+      } else if (error.response?.status && error.response.status >= 500) {
+        toast.error('Server error. Please try again later.');
+      } else if (error.response?.data && typeof error.response.data === 'object' && 'message' in error.response.data) {
+        toast.error((error.response.data as { message: string }).message);
+      }
     }
 
     return Promise.reject(error);

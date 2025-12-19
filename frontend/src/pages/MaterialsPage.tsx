@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import apiClient from '../api/client';
 import { Batch, Course, CourseMaterial, PageResponse } from '../types';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 
 const MaterialsPage: React.FC = () => {
+  const { user } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
   const [materials, setMaterials] = useState<CourseMaterial[]>([]);
@@ -15,6 +17,8 @@ const MaterialsPage: React.FC = () => {
   const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const canManage = user?.role === 'ADMIN' || user?.role === 'TEACHER';
 
   useEffect(() => {
     loadCourses();
@@ -128,16 +132,19 @@ const MaterialsPage: React.FC = () => {
   };
 
   return (
-    <div className="px-4 py-6 space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900">Course Materials</h1>
+    <div className="space-y-6">
+      <div>
+        <h1 className="ui-display">Course materials</h1>
+        <p className="ui-muted">Upload files for a batch and keep everything organized.</p>
+      </div>
 
-      <div className="bg-white shadow sm:rounded-lg p-4 space-y-4">
-        <h2 className="text-lg font-medium text-gray-900">Select Batch</h2>
+      <div className="ui-card ui-card-pad space-y-4">
+        <h2 className="ui-h2">Select batch</h2>
         <div className="flex flex-wrap gap-4 items-end">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Course</label>
+            <label className="ui-caption block mb-1">Course</label>
             <select
-              className="mt-1 block w-64 border border-gray-300 rounded-md px-3 py-2"
+              className="ui-select w-72"
               value={selectedCourseId}
               onChange={(e) => {
                 setSelectedCourseId(e.target.value);
@@ -153,9 +160,9 @@ const MaterialsPage: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Batch</label>
+            <label className="ui-caption block mb-1">Batch</label>
             <select
-              className="mt-1 block w-64 border border-gray-300 rounded-md px-3 py-2"
+              className="ui-select w-72"
               value={selectedBatchId}
               onChange={(e) => setSelectedBatchId(e.target.value)}
             >
@@ -170,102 +177,110 @@ const MaterialsPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white shadow sm:rounded-lg p-4 space-y-4">
-        <h2 className="text-lg font-medium text-gray-900">Upload Material</h2>
-        <form onSubmit={handleUpload} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-            <input
-              type="text"
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Lecture slides"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">File</label>
-            <input
-              type="file"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              className="mt-1 block w-full text-sm text-gray-500"
-            />
-          </div>
-          <div className="flex items-center mt-6">
-            <button
-              type="submit"
-              disabled={saving}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
-            >
-              {saving ? 'Uploading...' : 'Upload'}
-            </button>
-          </div>
-        </form>
+      <div className="ui-card ui-card-pad space-y-4">
+        <h2 className="ui-h2">Upload material</h2>
+        {canManage ? (
+          <form onSubmit={handleUpload} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            <div>
+              <label className="ui-caption block mb-1">Title</label>
+              <input
+                type="text"
+                className="ui-input"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Lecture slides"
+              />
+            </div>
+            <div>
+              <label className="ui-caption block mb-1">File</label>
+              <input
+                type="file"
+                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                className="mt-1 block w-full text-sm text-textSecondary"
+              />
+            </div>
+            <div className="flex items-center mt-6">
+              <button
+                type="submit"
+                disabled={saving}
+                className="ui-btn-primary"
+              >
+                {saving ? 'Uploading...' : 'Upload'}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <p className="ui-muted">Students can view and download materials, but only teachers/admins can upload.</p>
+        )}
       </div>
 
-      <div className="bg-white shadow sm:rounded-lg p-4">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Materials</h2>
+      <div className="ui-card ui-card-pad space-y-4">
+        <h2 className="ui-h2">Materials</h2>
         {!selectedBatchId ? (
-          <p className="text-sm text-gray-500">Select a batch to view materials.</p>
+          <p className="ui-muted">Select a batch to view materials.</p>
         ) : loading ? (
-          <div className="text-center py-8">Loading...</div>
+          <div className="text-center py-8 ui-muted">Loading...</div>
         ) : (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <div className="ui-table-wrap">
+            <table className="ui-table">
+              <thead className="ui-thead">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th">
                   Title
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th">
                   Size
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th">
                   Uploaded By
                 </th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th">
                   Uploaded At
                 </th>
-                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="ui-th text-right">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y divide-borderSubtle">
               {materials.map((material) => (
                 <tr key={material.id}>
-                  <td className="px-4 py-2 text-sm text-gray-900">{material.title}</td>
-                  <td className="px-4 py-2 text-sm text-gray-500">
+                  <td className="ui-td">{material.title}</td>
+                  <td className="ui-td-muted">
                     {material.fileSize ? `${(material.fileSize / 1024 / 1024).toFixed(2)} MB` : ''}
                   </td>
-                  <td className="px-4 py-2 text-sm text-gray-500">{material.uploadedByName}</td>
-                  <td className="px-4 py-2 text-sm text-gray-500">
+                  <td className="ui-td-muted">{material.uploadedByName}</td>
+                  <td className="ui-td-muted">
                     {material.uploadedAt ? new Date(material.uploadedAt).toLocaleString() : ''}
                   </td>
-                  <td className="px-4 py-2 text-sm text-right space-x-2">
+                  <td className="ui-td text-right space-x-2">
                     <button
                       onClick={() => handleDownload(material.id)}
-                      className="inline-flex items-center px-3 py-1 border border-gray-300 text-xs rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                      className="ui-btn-secondary ui-btn-sm"
                     >
                       Download
                     </button>
-                    <button
-                      onClick={() => handleDelete(material.id)}
-                      className="inline-flex items-center px-3 py-1 border border-red-300 text-xs rounded-md text-red-700 bg-white hover:bg-red-50"
-                    >
-                      Delete
-                    </button>
+                    {canManage ? (
+                      <button
+                        onClick={() => handleDelete(material.id)}
+                        className="ui-btn-danger ui-btn-sm"
+                      >
+                        Delete
+                      </button>
+                    ) : null}
                   </td>
                 </tr>
               ))}
               {materials.length === 0 && (
                 <tr>
-                  <td className="px-4 py-4 text-center text-sm text-gray-500" colSpan={5}>
+                  <td className="px-4 py-8 text-center text-sm text-textSecondary" colSpan={5}>
                     No materials uploaded yet.
                   </td>
                 </tr>
               )}
             </tbody>
-          </table>
+            </table>
+          </div>
         )}
       </div>
     </div>

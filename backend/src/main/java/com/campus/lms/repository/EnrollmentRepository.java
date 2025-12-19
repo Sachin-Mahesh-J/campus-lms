@@ -19,10 +19,10 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, UUID> {
 
     List<Enrollment> findByStudent(User student);
 
+    boolean existsByStudentIdAndBatchIdAndStatus(UUID studentId, UUID batchId, Enrollment.Status status);
+
     long countByStudentIdAndStatus(UUID studentId, Enrollment.Status status);
 
     @Query("SELECT COUNT(e) FROM Enrollment e WHERE e.batch.course.createdBy.id = :teacherId")
     long countByTeacherBatches(@Param("teacherId") UUID teacherId);
 }
-
-

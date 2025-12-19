@@ -13,12 +13,17 @@ import com.campus.lms.util.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Path;
+import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -34,8 +39,12 @@ public class SubmissionService {
 
     @Transactional(readOnly = true)
     public Page<SubmissionDto> listSubmissions(UUID assignmentId, Pageable pageable) {
-        Assignment assignment = assignmentRepository.findById(assignmentId)
+        Assignment assignment = assignmentRepository.findById(Objects.requireNonNull(assignmentId, "assignmentId"))
                 .orElseThrow(() -> new IllegalArgumentException("Assignment not found"));
+
+        User currentUser = getCurrentUser();
+        assertCanAccessAssignmentSubmissions(currentUser, assignment);
+
         return submissionRepository.findByAssignment(assignment, pageable)
                 .map(submissionMapper::toDto);
     }
@@ -49,7 +58,7 @@ public class SubmissionService {
 
     @Transactional
     public SubmissionDto submitAssignment(UUID assignmentId, SubmissionRequest request, MultipartFile file) {
-        Assignment assignment = assignmentRepository.findById(assignmentId)
+        Assignment assignment = assignmentRepository.findById(Objects.requireNonNull(assignmentId, "assignmentId"))
                 .orElseThrow(() -> new IllegalArgumentException("Assignment not found"));
         User student = getCurrentUser();
 
@@ -89,7 +98,7 @@ public class SubmissionService {
                 .submissionNumber(nextSubmissionNumber)
                 .build();
 
-        submission = submissionRepository.save(submission);
+        submission = Objects.requireNonNull(submissionRepository.save(Objects.requireNonNull(submission, "submission")), "savedSubmission");
         auditLogService.record(
                 student,
                 "SUBMISSION_CREATE",
@@ -103,9 +112,41 @@ public class SubmissionService {
 
     @Transactional(readOnly = true)
     public SubmissionDto getSubmission(UUID id) {
-        Submission submission = submissionRepository.findById(id)
+        Submission submission = submissionRepository.findById(Objects.requireNonNull(id, "id"))
                 .orElseThrow(() -> new IllegalArgumentException("Submission not found"));
+        User currentUser = getCurrentUser();
+        assertCanAccessSubmission(currentUser, submission);
         return submissionMapper.toDto(submission);
+    }
+
+    @Transactional(readOnly = true)
+    public SubmissionDownload getSubmissionDownload(UUID submissionId) {
+        Submission submission = submissionRepository.findById(Objects.requireNonNull(submissionId, "submissionId"))
+                .orElseThrow(() -> new IllegalArgumentException("Submission not found"));
+
+        User currentUser = getCurrentUser();
+        assertCanAccessSubmission(currentUser, submission);
+
+        if (!StringUtils.hasText(submission.getFilePath())) {
+            throw new IllegalArgumentException("No file attached for this submission");
+        }
+
+        Path path = fileStorageService.resolvePath(submission.getFilePath());
+
+        String ext = "";
+        String filePath = submission.getFilePath();
+        int dot = filePath.lastIndexOf('.');
+        if (dot != -1 && dot < filePath.length() - 1) {
+            ext = filePath.substring(dot);
+        }
+
+        String safeAssignment = safeFilenamePart(submission.getAssignment().getTitle());
+        String safeStudent = safeFilenamePart(submission.getStudent().getFullName());
+        Instant submittedAt = submission.getSubmittedAt();
+        String timestamp = submittedAt != null ? submittedAt.toString().replace(":", "-") : "unknown-time";
+        String filename = safeAssignment + "-" + safeStudent + "-attempt" + submission.getSubmissionNumber() + "-" + timestamp + ext;
+
+        return new SubmissionDownload(path, filename, submission.getFileSize());
     }
 
     private User getCurrentUser() {
@@ -114,5 +155,47 @@ public class SubmissionService {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
     }
+
+    private void assertCanAccessAssignmentSubmissions(User currentUser, Assignment assignment) {
+        if (currentUser.getRole() == User.Role.ADMIN) return;
+        if (currentUser.getRole() == User.Role.TEACHER) {
+            if (assignment.getCreatedBy() == null || !assignment.getCreatedBy().getId().equals(currentUser.getId())) {
+                throw new AccessDeniedException("Access Denied");
+            }
+            return;
+        }
+        throw new AccessDeniedException("Access Denied");
+    }
+
+    private void assertCanAccessSubmission(User currentUser, Submission submission) {
+        if (currentUser.getRole() == User.Role.ADMIN) return;
+        if (currentUser.getRole() == User.Role.TEACHER) {
+            Assignment assignment = submission.getAssignment();
+            if (assignment == null || assignment.getCreatedBy() == null || !assignment.getCreatedBy().getId().equals(currentUser.getId())) {
+                throw new AccessDeniedException("Access Denied");
+            }
+            return;
+        }
+        if (currentUser.getRole() == User.Role.STUDENT) {
+            if (submission.getStudent() == null || !submission.getStudent().getId().equals(currentUser.getId())) {
+                throw new AccessDeniedException("Access Denied");
+            }
+            return;
+        }
+        throw new AccessDeniedException("Access Denied");
+    }
+
+    private String safeFilenamePart(String input) {
+        if (!StringUtils.hasText(input)) return "unknown";
+        // keep it simple and filesystem-friendly
+        String cleaned = input
+                .trim()
+                .replaceAll("[\\\\/:*?\"<>|]+", "_")
+                .replaceAll("\\s+", "_")
+                .trim();
+        return cleaned.substring(0, Math.min(cleaned.length(), 60));
+    }
+
+    public record SubmissionDownload(Path path, String filename, Long size) {}
 }
 
