@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import apiClient from '../api/client';
-import { PageResponse, Submission } from '../types';
 import toast from 'react-hot-toast';
 
-const SubmissionsPage: React.FC = () => {
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
+const SubmissionsPage = () => {
+  const [submissions, setSubmissions] = useState([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -22,7 +21,7 @@ const SubmissionsPage: React.FC = () => {
         size: '20',
         sort: 'submittedAt,desc',
       });
-      const response = await apiClient.get<PageResponse<Submission>>(
+      const response = await apiClient.get(
         `/assignments/my-submissions?${params.toString()}`
       );
       setSubmissions(response.data.content);

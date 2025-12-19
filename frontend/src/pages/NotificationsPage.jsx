@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import apiClient from '../api/client';
-import { Notification, PageResponse } from '../types';
 import toast from 'react-hot-toast';
 
-const NotificationsPage: React.FC = () => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+const NotificationsPage = () => {
+  const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [markingId, setMarkingId] = useState<string | null>(null);
+  const [markingId, setMarkingId] = useState(null);
 
   const loadNotifications = async () => {
     setLoading(true);
@@ -18,7 +17,7 @@ const NotificationsPage: React.FC = () => {
         size: '20',
         sort: 'sentAt,desc',
       });
-      const response = await apiClient.get<PageResponse<Notification>>(
+      const response = await apiClient.get(
         `/notifications/me?${params.toString()}`
       );
       setNotifications(response.data.content);
@@ -35,7 +34,7 @@ const NotificationsPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
-  const markDelivered = async (id: string) => {
+  const markDelivered = async (id) => {
     setMarkingId(id);
     try {
       await apiClient.put(`/notifications/${id}/delivered`);

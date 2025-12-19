@@ -2,7 +2,7 @@ import React from 'react';
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const Layout: React.FC = () => {
+const Layout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 

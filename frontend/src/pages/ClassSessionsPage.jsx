@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import apiClient from '../api/client';
-import { Batch, ClassSession, Course, PageResponse } from '../types';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 
-const ClassSessionsPage: React.FC = () => {
+const ClassSessionsPage = () => {
   const { user } = useAuth();
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [batches, setBatches] = useState<Batch[]>([]);
-  const [selectedCourseId, setSelectedCourseId] = useState<string>('');
-  const [selectedBatchId, setSelectedBatchId] = useState<string>('');
-  const [sessions, setSessions] = useState<ClassSession[]>([]);
+  const [courses, setCourses] = useState([]);
+  const [batches, setBatches] = useState([]);
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [selectedBatchId, setSelectedBatchId] = useState('');
+  const [sessions, setSessions] = useState([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -18,14 +17,7 @@ const ClassSessionsPage: React.FC = () => {
 
   const canManage = user?.role === 'ADMIN' || user?.role === 'TEACHER';
 
-  const [form, setForm] = useState<{
-    batchId: string;
-    title: string;
-    sessionDate: string;
-    startTime: string;
-    endTime: string;
-    location: string;
-  }>({
+  const [form, setForm] = useState({
     batchId: '',
     title: '',
     sessionDate: '',
@@ -51,7 +43,7 @@ const ClassSessionsPage: React.FC = () => {
   const loadCourses = async () => {
     try {
       const params = new URLSearchParams({ page: '0', size: '100', sort: 'title,asc' });
-      const response = await apiClient.get<PageResponse<Course>>(`/courses?${params.toString()}`);
+      const response = await apiClient.get(`/courses?${params.toString()}`);
       setCourses(response.data.content);
     } catch {
       toast.error('Failed to load courses');
@@ -61,7 +53,7 @@ const ClassSessionsPage: React.FC = () => {
   const loadAllBatches = async () => {
     try {
       const params = new URLSearchParams({ page: '0', size: '200' });
-      const response = await apiClient.get<PageResponse<Batch>>(`/batches?${params.toString()}`);
+      const response = await apiClient.get(`/batches?${params.toString()}`);
       setBatches(response.data.content);
     } catch {
       toast.error('Failed to load batches');
@@ -78,7 +70,7 @@ const ClassSessionsPage: React.FC = () => {
         sort: 'sessionDate,asc',
       });
       params.append('batchId', selectedBatchId);
-      const response = await apiClient.get<PageResponse<ClassSession>>(
+      const response = await apiClient.get(
         `/sessions?${params.toString()}`
       );
       setSessions(response.data.content);
@@ -94,7 +86,7 @@ const ClassSessionsPage: React.FC = () => {
     ? batches.filter((b) => b.courseId === selectedCourseId)
     : batches;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.batchId || !form.sessionDate || !form.startTime || !form.endTime) {
       toast.error('Batch, date, and times are required');

@@ -1,22 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import apiClient from '../api/client';
-import { Batch, Course, Enrollment, PageResponse, User } from '../types';
 import toast from 'react-hot-toast';
 import { usersApi } from '../api/users';
 
-const EnrollmentsPage: React.FC = () => {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [batches, setBatches] = useState<Batch[]>([]);
-  const [selectedCourseId, setSelectedCourseId] = useState<string>('');
-  const [selectedBatchId, setSelectedBatchId] = useState<string>('');
-  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+const EnrollmentsPage = () => {
+  const [courses, setCourses] = useState([]);
+  const [batches, setBatches] = useState([]);
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [selectedBatchId, setSelectedBatchId] = useState('');
+  const [enrollments, setEnrollments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [bulkInput, setBulkInput] = useState('');
   const [savingBulk, setSavingBulk] = useState(false);
 
   // Manual enrollment state
   const [studentSearch, setStudentSearch] = useState('');
-  const [searchResults, setSearchResults] = useState<User[]>([]);
+  const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
 
   useEffect(() => {
@@ -35,7 +34,7 @@ const EnrollmentsPage: React.FC = () => {
   const loadCourses = async () => {
     try {
       const params = new URLSearchParams({ page: '0', size: '100', sort: 'title,asc' });
-      const response = await apiClient.get<PageResponse<Course>>(`/courses?${params.toString()}`);
+      const response = await apiClient.get(`/courses?${params.toString()}`);
       setCourses(response.data.content);
     } catch {
       toast.error('Failed to load courses');
@@ -45,17 +44,17 @@ const EnrollmentsPage: React.FC = () => {
   const loadAllBatches = async () => {
     try {
       const params = new URLSearchParams({ page: '0', size: '200' });
-      const response = await apiClient.get<PageResponse<Batch>>(`/batches?${params.toString()}`);
+      const response = await apiClient.get(`/batches?${params.toString()}`);
       setBatches(response.data.content);
     } catch {
       toast.error('Failed to load batches');
     }
   };
 
-  const loadEnrollments = async (batchId: string) => {
+  const loadEnrollments = async (batchId) => {
     setLoading(true);
     try {
-      const response = await apiClient.get<Enrollment[]>(`/batches/${batchId}/enrollments`);
+      const response = await apiClient.get(`/batches/${batchId}/enrollments`);
       setEnrollments(response.data);
     } catch {
       toast.error('Failed to load enrollments');
@@ -68,7 +67,7 @@ const EnrollmentsPage: React.FC = () => {
     ? batches.filter((b) => b.courseId === selectedCourseId)
     : batches;
 
-  const handleBulkEnroll = async (e: React.FormEvent) => {
+  const handleBulkEnroll = async (e) => {
     e.preventDefault();
     if (!selectedBatchId) {
       toast.error('Select a batch first');
@@ -97,7 +96,7 @@ const EnrollmentsPage: React.FC = () => {
     }
   };
 
-  const handleStudentSearch = async (e: React.FormEvent) => {
+  const handleStudentSearch = async (e) => {
     e.preventDefault();
     if (!studentSearch.trim()) {
       setSearchResults([]);
@@ -115,7 +114,7 @@ const EnrollmentsPage: React.FC = () => {
     }
   };
 
-  const enrollSingleStudent = async (studentId: string) => {
+  const enrollSingleStudent = async (studentId) => {
     if (!selectedBatchId) {
       toast.error('Select a batch first');
       return;

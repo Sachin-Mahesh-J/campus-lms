@@ -1,21 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import apiClient from '../api/client';
-import { AttendanceRecord, Batch, ClassSession, Course, Enrollment, PageResponse } from '../types';
 import toast from 'react-hot-toast';
 
-type AttendanceStatus = AttendanceRecord['status'];
+const AttendancePage = () => {
+  const [courses, setCourses] = useState([]);
+  const [batches, setBatches] = useState([]);
+  const [sessions, setSessions] = useState([]);
+  const [enrollments, setEnrollments] = useState([]);
 
-const AttendancePage: React.FC = () => {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [batches, setBatches] = useState<Batch[]>([]);
-  const [sessions, setSessions] = useState<ClassSession[]>([]);
-  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [selectedBatchId, setSelectedBatchId] = useState('');
+  const [selectedSessionId, setSelectedSessionId] = useState('');
 
-  const [selectedCourseId, setSelectedCourseId] = useState<string>('');
-  const [selectedBatchId, setSelectedBatchId] = useState<string>('');
-  const [selectedSessionId, setSelectedSessionId] = useState<string>('');
-
-  const [statusMap, setStatusMap] = useState<Record<string, AttendanceStatus>>({});
+  const [statusMap, setStatusMap] = useState({});
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -39,7 +36,7 @@ const AttendancePage: React.FC = () => {
   const loadCourses = async () => {
     try {
       const params = new URLSearchParams({ page: '0', size: '100', sort: 'title,asc' });
-      const response = await apiClient.get<PageResponse<Course>>(`/courses?${params.toString()}`);
+      const response = await apiClient.get(`/courses?${params.toString()}`);
       setCourses(response.data.content);
     } catch {
       toast.error('Failed to load courses');
@@ -49,7 +46,7 @@ const AttendancePage: React.FC = () => {
   const loadAllBatches = async () => {
     try {
       const params = new URLSearchParams({ page: '0', size: '200' });
-      const response = await apiClient.get<PageResponse<Batch>>(`/batches?${params.toString()}`);
+      const response = await apiClient.get(`/batches?${params.toString()}`);
       setBatches(response.data.content);
     } catch {
       toast.error('Failed to load batches');
@@ -64,8 +61,8 @@ const AttendancePage: React.FC = () => {
         size: '100',
         batchId: selectedBatchId,
         sort: 'sessionDate,asc',
-      } as any);
-      const response = await apiClient.get<PageResponse<ClassSession>>(
+      });
+      const response = await apiClient.get(
         `/sessions?${params.toString()}`
       );
       setSessions(response.data.content);
@@ -77,9 +74,9 @@ const AttendancePage: React.FC = () => {
   const loadEnrollments = async () => {
     if (!selectedBatchId) return;
     try {
-      const response = await apiClient.get<Enrollment[]>(`/batches/${selectedBatchId}/enrollments`);
+      const response = await apiClient.get(`/batches/${selectedBatchId}/enrollments`);
       setEnrollments(response.data);
-      const initial: Record<string, AttendanceStatus> = {};
+      const initial = {};
       response.data.forEach((e) => {
         initial[e.studentId] = 'PRESENT';
       });
@@ -93,11 +90,11 @@ const AttendancePage: React.FC = () => {
     ? batches.filter((b) => b.courseId === selectedCourseId)
     : batches;
 
-  const handleStatusChange = (studentId: string, status: AttendanceStatus) => {
+  const handleStatusChange = (studentId, status) => {
     setStatusMap((prev) => ({ ...prev, [studentId]: status }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedSessionId || !selectedBatchId) {
       toast.error('Select batch and session first');
@@ -208,10 +205,7 @@ const AttendancePage: React.FC = () => {
                           className="ui-select w-44 px-3 py-1.5"
                           value={statusMap[enrollment.studentId] || 'PRESENT'}
                           onChange={(e) =>
-                            handleStatusChange(
-                              enrollment.studentId,
-                              e.target.value as AttendanceStatus
-                            )
+                            handleStatusChange(enrollment.studentId, e.target.value)
                           }
                         >
                           <option value="PRESENT">Present</option>

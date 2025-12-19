@@ -1,24 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import apiClient from '../api/client';
-import { Batch, Course, PageResponse } from '../types';
 import toast from 'react-hot-toast';
 
-const BatchesPage: React.FC = () => {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [selectedCourseId, setSelectedCourseId] = useState<string>('');
-  const [batches, setBatches] = useState<Batch[]>([]);
+const BatchesPage = () => {
+  const [courses, setCourses] = useState([]);
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [batches, setBatches] = useState([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const [form, setForm] = useState<{
-    id?: string;
-    courseId: string;
-    name: string;
-    academicYear: string;
-    semester: number;
-  }>({
+  const [form, setForm] = useState({
+    id: undefined,
     courseId: '',
     name: '',
     academicYear: '',
@@ -37,7 +31,7 @@ const BatchesPage: React.FC = () => {
   const loadCourses = async () => {
     try {
       const params = new URLSearchParams({ page: '0', size: '100', sort: 'title,asc' });
-      const response = await apiClient.get<PageResponse<Course>>(`/courses?${params.toString()}`);
+      const response = await apiClient.get(`/courses?${params.toString()}`);
       setCourses(response.data.content);
     } catch {
       toast.error('Failed to load courses');
@@ -54,7 +48,7 @@ const BatchesPage: React.FC = () => {
       if (selectedCourseId) {
         params.append('courseId', selectedCourseId);
       }
-      const response = await apiClient.get<PageResponse<Batch>>(`/batches?${params.toString()}`);
+      const response = await apiClient.get(`/batches?${params.toString()}`);
       setBatches(response.data.content);
       setTotalPages(response.data.totalPages);
     } catch {
@@ -73,7 +67,7 @@ const BatchesPage: React.FC = () => {
     });
   };
 
-  const handleEdit = (batch: Batch) => {
+  const handleEdit = (batch) => {
     setForm({
       id: batch.id,
       courseId: batch.courseId,
@@ -83,7 +77,7 @@ const BatchesPage: React.FC = () => {
     });
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this batch?')) return;
     try {
       await apiClient.delete(`/batches/${id}`);
@@ -94,7 +88,7 @@ const BatchesPage: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.courseId) {
       toast.error('Course is required');

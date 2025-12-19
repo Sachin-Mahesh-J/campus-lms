@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import apiClient from '../api/client';
-import { Course, PageResponse } from '../types';
 import toast from 'react-hot-toast';
 
-const CoursesPage: React.FC = () => {
-  const [courses, setCourses] = useState<Course[]>([]);
+const CoursesPage = () => {
+  const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -12,16 +11,8 @@ const CoursesPage: React.FC = () => {
 
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState<{
-    id?: string;
-    code: string;
-    title: string;
-    description: string;
-    department: string;
-    credits: string;
-    startDate: string;
-    endDate: string;
-  }>({
+  const [form, setForm] = useState({
+    id: undefined,
     code: '',
     title: '',
     description: '',
@@ -44,7 +35,7 @@ const CoursesPage: React.FC = () => {
         size: '20',
       });
       if (search) params.append('search', search);
-      const response = await apiClient.get<PageResponse<Course>>(`/courses?${params.toString()}`);
+      const response = await apiClient.get(`/courses?${params.toString()}`);
       setCourses(response.data.content);
       setTotalPages(response.data.totalPages);
     } catch {
@@ -68,7 +59,7 @@ const CoursesPage: React.FC = () => {
     setShowForm(true);
   };
 
-  const openEditForm = (course: Course) => {
+  const openEditForm = (course) => {
     setForm({
       id: course.id,
       code: course.code,
@@ -82,7 +73,7 @@ const CoursesPage: React.FC = () => {
     setShowForm(true);
   };
 
-  const archiveCourse = async (course: Course) => {
+  const archiveCourse = async (course) => {
     if (course.archived) return;
     if (!window.confirm(`Archive course "${course.code} - ${course.title}"?`)) return;
     try {
@@ -94,7 +85,7 @@ const CoursesPage: React.FC = () => {
     }
   };
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     if (!form.code.trim() || !form.title.trim()) {
       toast.error('Code and title are required');
@@ -102,7 +93,7 @@ const CoursesPage: React.FC = () => {
     }
     setSaving(true);
     try {
-      const payload: any = {
+      const payload = {
         code: form.code.trim(),
         title: form.title.trim(),
         description: form.description.trim() || null,

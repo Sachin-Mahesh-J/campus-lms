@@ -1,27 +1,18 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authApi } from '../api/auth';
-import { LoginResponse, UserRole } from '../types';
 import toast from 'react-hot-toast';
 
-interface AuthContextType {
-  user: LoginResponse | null;
-  login: (usernameOrEmail: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  isAuthenticated: boolean;
-  hasRole: (role: UserRole) => boolean;
-}
+const AuthContext = createContext(undefined);
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<LoginResponse | null>(null);
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     // Rehydrate user from localStorage first so refresh doesn't "log out" on full reload
     const storedUser = localStorage.getItem('authUser');
     if (storedUser) {
       try {
-        const parsed = JSON.parse(storedUser) as LoginResponse;
+        const parsed = JSON.parse(storedUser);
         setUser(parsed);
       } catch {
         localStorage.removeItem('authUser');
@@ -44,14 +35,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, []);
 
-  const login = async (usernameOrEmail: string, password: string) => {
+  const login = async (usernameOrEmail, password) => {
     try {
       const response = await authApi.login({ usernameOrEmail, password });
       setUser(response);
       localStorage.setItem('authUser', JSON.stringify(response));
       toast.success('Login successful');
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Login failed');
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Login failed');
       throw error;
     }
   };
@@ -71,7 +62,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const isAuthenticated = !!user;
-  const hasRole = (role: UserRole) => user?.role === role;
+  const hasRole = (role) => user?.role === role;
 
   return (
     <AuthContext.Provider value={{ user, login, logout, isAuthenticated, hasRole }}>

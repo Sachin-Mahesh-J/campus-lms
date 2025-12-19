@@ -3,20 +3,20 @@ import { Link } from 'react-router-dom';
 import { authApi } from '../api/auth';
 import toast from 'react-hot-toast';
 
-const ForgotPasswordPage: React.FC = () => {
+const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
       await authApi.forgotPassword(email);
       setSent(true);
       toast.success('Password reset email sent');
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to send reset email');
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Failed to send reset email');
     } finally {
       setLoading(false);
     }

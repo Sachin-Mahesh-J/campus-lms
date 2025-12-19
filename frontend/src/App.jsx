@@ -23,7 +23,7 @@ import UsersPage from './pages/UsersPage';
 import NotificationsPage from './pages/NotificationsPage';
 import Layout from './components/Layout';
 
-const AppRoutes: React.FC = () => {
+const AppRoutes = () => {
   const { isAuthenticated, user } = useAuth();
 
   const getDefaultRoute = () => {
@@ -62,7 +62,7 @@ const AppRoutes: React.FC = () => {
   );
 };
 
-const App: React.FC = () => {
+const App = () => {
   return (
     <AuthProvider>
       <BrowserRouter>

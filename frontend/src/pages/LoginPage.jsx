@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const LoginPage: React.FC = () => {
+const LoginPage = () => {
   const [usernameOrEmail, setUsernameOrEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState(null);
   const { login, user } = useAuth();
   const navigate = useNavigate();
 
@@ -18,7 +18,7 @@ const LoginPage: React.FC = () => {
     }
   }, [user, navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setErrorMessage(null);
@@ -31,8 +31,8 @@ const LoginPage: React.FC = () => {
       }
     } catch (error) {
       const message =
-        (error as any)?.response?.data?.message ||
-        (error as any)?.message ||
+        error?.response?.data?.message ||
+        error?.message ||
         'Invalid username/email or password';
       setErrorMessage(message);
     } finally {

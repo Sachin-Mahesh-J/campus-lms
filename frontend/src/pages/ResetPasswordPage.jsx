@@ -3,7 +3,7 @@ import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { authApi } from '../api/auth';
 import toast from 'react-hot-toast';
 
-const ResetPasswordPage: React.FC = () => {
+const ResetPasswordPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [newPassword, setNewPassword] = useState('');
@@ -12,7 +12,7 @@ const ResetPasswordPage: React.FC = () => {
 
   const token = searchParams.get('token');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
       toast.error('Passwords do not match');
@@ -31,8 +31,8 @@ const ResetPasswordPage: React.FC = () => {
       await authApi.resetPassword(token, newPassword);
       toast.success('Password reset successful');
       navigate('/login');
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to reset password');
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Failed to reset password');
     } finally {
       setLoading(false);
     }

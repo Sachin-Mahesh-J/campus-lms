@@ -1,41 +1,20 @@
 import React, { useState } from 'react';
 import apiClient from '../api/client';
-import { Batch, Course, PageResponse } from '../types';
 import toast from 'react-hot-toast';
 
-interface AttendanceReport {
-  batchId?: string;
-  studentId?: string;
-  totalRecords: number;
-  present: number;
-  absent: number;
-  late: number;
-  excused: number;
-  attendanceRate: number;
-}
-
-interface GradesReport {
-  batchId?: string;
-  studentId?: string;
-  totalGrades: number;
-  averagePoints: number;
-  minPoints: number;
-  maxPoints: number;
-}
-
-const ReportsPage: React.FC = () => {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [batches, setBatches] = useState<Batch[]>([]);
+const ReportsPage = () => {
+  const [courses, setCourses] = useState([]);
+  const [batches, setBatches] = useState([]);
 
   const [coursesLoaded, setCoursesLoaded] = useState(false);
   const [batchesLoaded, setBatchesLoaded] = useState(false);
 
-  const [selectedCourseId, setSelectedCourseId] = useState<string>('');
-  const [selectedBatchId, setSelectedBatchId] = useState<string>('');
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [selectedBatchId, setSelectedBatchId] = useState('');
   const [studentId, setStudentId] = useState('');
 
-  const [attendanceReport, setAttendanceReport] = useState<AttendanceReport | null>(null);
-  const [gradesReport, setGradesReport] = useState<GradesReport | null>(null);
+  const [attendanceReport, setAttendanceReport] = useState(null);
+  const [gradesReport, setGradesReport] = useState(null);
 
   const [loadingAttendance, setLoadingAttendance] = useState(false);
   const [loadingGrades, setLoadingGrades] = useState(false);
@@ -44,7 +23,7 @@ const ReportsPage: React.FC = () => {
     if (coursesLoaded) return;
     try {
       const params = new URLSearchParams({ page: '0', size: '200', sort: 'title,asc' });
-      const response = await apiClient.get<PageResponse<Course>>(`/courses?${params.toString()}`);
+      const response = await apiClient.get(`/courses?${params.toString()}`);
       setCourses(response.data.content);
       setCoursesLoaded(true);
     } catch {
@@ -56,7 +35,7 @@ const ReportsPage: React.FC = () => {
     if (batchesLoaded) return;
     try {
       const params = new URLSearchParams({ page: '0', size: '200' });
-      const response = await apiClient.get<PageResponse<Batch>>(`/batches?${params.toString()}`);
+      const response = await apiClient.get(`/batches?${params.toString()}`);
       setBatches(response.data.content);
       setBatchesLoaded(true);
     } catch {
@@ -68,14 +47,14 @@ const ReportsPage: React.FC = () => {
     ? batches.filter((b) => b.courseId === selectedCourseId)
     : batches;
 
-  const loadAttendanceReport = async (e: React.FormEvent) => {
+  const loadAttendanceReport = async (e) => {
     e.preventDefault();
     setLoadingAttendance(true);
     try {
       const params = new URLSearchParams();
       if (selectedBatchId) params.append('batchId', selectedBatchId);
       if (studentId) params.append('studentId', studentId);
-      const response = await apiClient.get<AttendanceReport>(
+      const response = await apiClient.get(
         `/reports/attendance?${params.toString()}`
       );
       setAttendanceReport(response.data);
@@ -86,14 +65,14 @@ const ReportsPage: React.FC = () => {
     }
   };
 
-  const loadGradesReport = async (e: React.FormEvent) => {
+  const loadGradesReport = async (e) => {
     e.preventDefault();
     setLoadingGrades(true);
     try {
       const params = new URLSearchParams();
       if (selectedBatchId) params.append('batchId', selectedBatchId);
       if (studentId) params.append('studentId', studentId);
-      const response = await apiClient.get<GradesReport>(`/reports/grades?${params.toString()}`);
+      const response = await apiClient.get(`/reports/grades?${params.toString()}`);
       setGradesReport(response.data);
     } catch {
       toast.error('Failed to load grades report');

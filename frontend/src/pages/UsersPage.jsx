@@ -1,22 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import apiClient from '../api/client';
-import { PageResponse, User, UserRole } from '../types';
 import toast from 'react-hot-toast';
 
-const UsersPage: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
+const UsersPage = () => {
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [search, setSearch] = useState('');
 
-  const [form, setForm] = useState<{
-    username: string;
-    email: string;
-    fullName: string;
-    role: UserRole;
-    password: string;
-  }>({
+  const [form, setForm] = useState({
     username: '',
     email: '',
     fullName: '',
@@ -38,7 +31,7 @@ const UsersPage: React.FC = () => {
         size: '20',
       });
       if (search) params.append('search', search);
-      const response = await apiClient.get<PageResponse<User>>(`/users?${params.toString()}`);
+      const response = await apiClient.get(`/users?${params.toString()}`);
       setUsers(response.data.content);
       setTotalPages(response.data.totalPages);
     } catch {
@@ -48,7 +41,7 @@ const UsersPage: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.username.trim() || !form.email.trim() || !form.fullName.trim() || !form.password) {
       toast.error('Username, email, full name and password are required');
@@ -129,7 +122,7 @@ const UsersPage: React.FC = () => {
             <select
               className="ui-select"
               value={form.role}
-              onChange={(e) => setForm((f) => ({ ...f, role: e.target.value as UserRole }))}
+              onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
             >
               <option value="STUDENT">Student</option>
               <option value="TEACHER">Teacher</option>

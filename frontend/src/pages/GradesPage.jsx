@@ -1,23 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import apiClient from '../api/client';
-import { Assignment, Batch, Course, Grade, PageResponse, Submission } from '../types';
 import toast from 'react-hot-toast';
 
-const GradesPage: React.FC = () => {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [batches, setBatches] = useState<Batch[]>([]);
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [grades, setGrades] = useState<Grade[]>([]);
+const GradesPage = () => {
+  const [courses, setCourses] = useState([]);
+  const [batches, setBatches] = useState([]);
+  const [assignments, setAssignments] = useState([]);
+  const [submissions, setSubmissions] = useState([]);
+  const [grades, setGrades] = useState([]);
 
-  const [selectedCourseId, setSelectedCourseId] = useState<string>('');
-  const [selectedBatchId, setSelectedBatchId] = useState<string>('');
-  const [selectedAssignmentId, setSelectedAssignmentId] = useState<string>('');
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [selectedBatchId, setSelectedBatchId] = useState('');
+  const [selectedAssignmentId, setSelectedAssignmentId] = useState('');
 
-  const [gradeEdits, setGradeEdits] = useState<
-    Record<string, { pointsAwarded: string; feedback: string }>
-  >({});
-  const [savingSubmissionId, setSavingSubmissionId] = useState<string | null>(null);
+  const [gradeEdits, setGradeEdits] = useState({});
+  const [savingSubmissionId, setSavingSubmissionId] = useState(null);
 
   useEffect(() => {
     loadCourses();
@@ -48,7 +45,7 @@ const GradesPage: React.FC = () => {
   const loadCourses = async () => {
     try {
       const params = new URLSearchParams({ page: '0', size: '100', sort: 'title,asc' });
-      const response = await apiClient.get<PageResponse<Course>>(`/courses?${params.toString()}`);
+      const response = await apiClient.get(`/courses?${params.toString()}`);
       setCourses(response.data.content);
     } catch {
       toast.error('Failed to load courses');
@@ -58,7 +55,7 @@ const GradesPage: React.FC = () => {
   const loadAllBatches = async () => {
     try {
       const params = new URLSearchParams({ page: '0', size: '200' });
-      const response = await apiClient.get<PageResponse<Batch>>(`/batches?${params.toString()}`);
+      const response = await apiClient.get(`/batches?${params.toString()}`);
       setBatches(response.data.content);
     } catch {
       toast.error('Failed to load batches');
@@ -73,8 +70,8 @@ const GradesPage: React.FC = () => {
         size: '100',
         batchId: selectedBatchId,
         sort: 'dueDate,asc',
-      } as any);
-      const response = await apiClient.get<PageResponse<Assignment>>(
+      });
+      const response = await apiClient.get(
         `/assignments?${params.toString()}`
       );
       setAssignments(response.data.content);
@@ -87,16 +84,16 @@ const GradesPage: React.FC = () => {
     if (!selectedAssignmentId) return;
     try {
       const [subsRes, gradesRes] = await Promise.all([
-        apiClient.get<PageResponse<Submission>>(
+        apiClient.get(
           `/assignments/${selectedAssignmentId}/submissions?page=0&size=200`
         ),
-        apiClient.get<PageResponse<Grade>>(
+        apiClient.get(
           `/assignments/${selectedAssignmentId}/grades?page=0&size=200`
         ),
       ]);
       setSubmissions(subsRes.data.content);
       setGrades(gradesRes.data.content);
-      const initial: Record<string, { pointsAwarded: string; feedback: string }> = {};
+      const initial = {};
       subsRes.data.content.forEach((submission) => {
         const grade = gradesRes.data.content.find((g) => g.submissionId === submission.id);
         initial[submission.id] = {
@@ -115,9 +112,9 @@ const GradesPage: React.FC = () => {
     : batches;
 
   const handleGradeChange = (
-    submissionId: string,
-    field: 'pointsAwarded' | 'feedback',
-    value: string
+    submissionId,
+    field,
+    value
   ) => {
     setGradeEdits((prev) => ({
       ...prev,
@@ -128,7 +125,7 @@ const GradesPage: React.FC = () => {
     }));
   };
 
-  const handleSaveGrade = async (submissionId: string) => {
+  const handleSaveGrade = async (submissionId) => {
     if (!selectedAssignmentId) return;
     const edit = gradeEdits[submissionId];
     if (!edit || !edit.pointsAwarded) {
@@ -155,7 +152,7 @@ const GradesPage: React.FC = () => {
     }
   };
 
-  const getGradeForSubmission = (submissionId: string) =>
+  const getGradeForSubmission = (submissionId) =>
     grades.find((g) => g.submissionId === submissionId);
 
   return (

@@ -1,19 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import apiClient from '../api/client';
-import { Batch, Course, CourseMaterial, PageResponse } from '../types';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 
-const MaterialsPage: React.FC = () => {
+const MaterialsPage = () => {
   const { user } = useAuth();
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [batches, setBatches] = useState<Batch[]>([]);
-  const [materials, setMaterials] = useState<CourseMaterial[]>([]);
+  const [courses, setCourses] = useState([]);
+  const [batches, setBatches] = useState([]);
+  const [materials, setMaterials] = useState([]);
 
-  const [selectedCourseId, setSelectedCourseId] = useState<string>('');
-  const [selectedBatchId, setSelectedBatchId] = useState<string>('');
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [selectedBatchId, setSelectedBatchId] = useState('');
 
-  const [file, setFile] = useState<File | null>(null);
+  const [file, setFile] = useState(null);
   const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -37,7 +36,7 @@ const MaterialsPage: React.FC = () => {
   const loadCourses = async () => {
     try {
       const params = new URLSearchParams({ page: '0', size: '100', sort: 'title,asc' });
-      const response = await apiClient.get<PageResponse<Course>>(`/courses?${params.toString()}`);
+      const response = await apiClient.get(`/courses?${params.toString()}`);
       setCourses(response.data.content);
     } catch {
       toast.error('Failed to load courses');
@@ -47,7 +46,7 @@ const MaterialsPage: React.FC = () => {
   const loadAllBatches = async () => {
     try {
       const params = new URLSearchParams({ page: '0', size: '200' });
-      const response = await apiClient.get<PageResponse<Batch>>(`/batches?${params.toString()}`);
+      const response = await apiClient.get(`/batches?${params.toString()}`);
       setBatches(response.data.content);
     } catch {
       toast.error('Failed to load batches');
@@ -62,8 +61,8 @@ const MaterialsPage: React.FC = () => {
         batchId: selectedBatchId,
         page: '0',
         size: '100',
-      } as any);
-      const response = await apiClient.get<PageResponse<CourseMaterial>>(
+      });
+      const response = await apiClient.get(
         `/materials?${params.toString()}`
       );
       setMaterials(response.data.content);
@@ -78,7 +77,7 @@ const MaterialsPage: React.FC = () => {
     ? batches.filter((b) => b.courseId === selectedCourseId)
     : batches;
 
-  const handleUpload = async (e: React.FormEvent) => {
+  const handleUpload = async (e) => {
     e.preventDefault();
     if (!selectedBatchId) {
       toast.error('Select a batch first');
@@ -116,7 +115,7 @@ const MaterialsPage: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id) => {
     if (!window.confirm('Delete this material?')) return;
     try {
       await apiClient.delete(`/materials/${id}`);
@@ -127,7 +126,7 @@ const MaterialsPage: React.FC = () => {
     }
   };
 
-  const handleDownload = (id: string) => {
+  const handleDownload = (id) => {
     window.open(`/api/materials/${id}/download`, '_blank');
   };
 

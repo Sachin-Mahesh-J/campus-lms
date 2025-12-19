@@ -1,17 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import apiClient from '../../api/client';
-import { Dashboard } from '../../types';
 import toast from 'react-hot-toast';
 
-const TeacherDashboard: React.FC = () => {
-  const [dashboard, setDashboard] = useState<Dashboard | null>(null);
+const StudentDashboard = () => {
+  const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const response = await apiClient.get<Dashboard>('/dashboard/teacher');
+        const response = await apiClient.get('/dashboard/student');
         setDashboard(response.data);
       } catch (error) {
         toast.error('Failed to load dashboard');
@@ -30,29 +29,26 @@ const TeacherDashboard: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="ui-display">Teacher dashboard</h1>
-          <p className="ui-muted">Plan, teach, and grade — all in one place.</p>
+          <h1 className="ui-display">Student dashboard</h1>
+          <p className="ui-muted">Stay on top of your coursework and deadlines.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link to="/assignments" className="ui-btn-primary">
             Assignments
           </Link>
-          <Link to="/attendance" className="ui-btn-secondary">
-            Attendance
-          </Link>
-          <Link to="/grades" className="ui-btn-secondary">
-            Grades
+          <Link to="/submissions" className="ui-btn-secondary">
+            Submissions
           </Link>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {[
-          { label: 'Total courses', value: dashboard?.totalCourses || 0 },
-          { label: 'Total batches', value: dashboard?.totalBatches || 0 },
-          { label: 'Total students', value: dashboard?.totalStudents || 0 },
-          { label: 'Pending gradings', value: dashboard?.pendingGradings || 0 },
+          { label: 'Enrolled courses', value: dashboard?.totalCourses || 0 },
           { label: 'Total assignments', value: dashboard?.totalAssignments || 0 },
+          { label: 'Pending submissions', value: dashboard?.pendingSubmissions || 0 },
+          { label: 'Completed assignments', value: dashboard?.completedAssignments || 0 },
+          { label: 'Attendance rate', value: `${dashboard?.attendanceRate || 0}%` },
         ].map((stat) => (
           <div key={stat.label} className="ui-card ui-card-pad">
             <div className="text-3xl font-bold text-textPrimary">{stat.value}</div>
@@ -64,5 +60,5 @@ const TeacherDashboard: React.FC = () => {
   );
 };
 
-export default TeacherDashboard;
+export default StudentDashboard;
 

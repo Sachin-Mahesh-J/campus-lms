@@ -1,30 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import apiClient from '../api/client';
-import { Assignment, Batch, Course, PageResponse, Submission } from '../types';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 
-const AssignmentsPage: React.FC = () => {
+const AssignmentsPage = () => {
   const { user } = useAuth();
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [batches, setBatches] = useState<Batch[]>([]);
-  const [selectedCourseId, setSelectedCourseId] = useState<string>('');
-  const [selectedBatchId, setSelectedBatchId] = useState<string>('');
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [courses, setCourses] = useState([]);
+  const [batches, setBatches] = useState([]);
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [selectedBatchId, setSelectedBatchId] = useState('');
+  const [assignments, setAssignments] = useState([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const [form, setForm] = useState<{
-    id?: string;
-    batchId: string;
-    title: string;
-    description: string;
-    dueDate: string;
-    maxPoints: number;
-    allowResubmission: boolean;
-  }>({
+  const [form, setForm] = useState({
+    id: undefined,
     batchId: '',
     title: '',
     description: '',
@@ -33,23 +25,23 @@ const AssignmentsPage: React.FC = () => {
     allowResubmission: false,
   });
 
-  const [submitModal, setSubmitModal] = useState<{
-    open: boolean;
-    assignment?: Assignment;
-  }>({ open: false });
+  const [submitModal, setSubmitModal] = useState({
+    open: false,
+    assignment: undefined,
+  });
   const [submitContent, setSubmitContent] = useState('');
-  const [submitFile, setSubmitFile] = useState<File | null>(null);
+  const [submitFile, setSubmitFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const [submissionsModal, setSubmissionsModal] = useState<{
-    open: boolean;
-    assignment?: Assignment;
-  }>({ open: false });
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [submissionsModal, setSubmissionsModal] = useState({
+    open: false,
+    assignment: undefined,
+  });
+  const [submissions, setSubmissions] = useState([]);
   const [submissionsPage, setSubmissionsPage] = useState(0);
   const [submissionsTotalPages, setSubmissionsTotalPages] = useState(0);
   const [submissionsLoading, setSubmissionsLoading] = useState(false);
-  const [downloadingSubmissionId, setDownloadingSubmissionId] = useState<string | null>(null);
+  const [downloadingSubmissionId, setDownloadingSubmissionId] = useState(null);
 
   const isTeacher = user?.role === 'TEACHER' || user?.role === 'ADMIN';
 
@@ -66,7 +58,7 @@ const AssignmentsPage: React.FC = () => {
   const loadCourses = async () => {
     try {
       const params = new URLSearchParams({ page: '0', size: '100', sort: 'title,asc' });
-      const response = await apiClient.get<PageResponse<Course>>(`/courses?${params.toString()}`);
+      const response = await apiClient.get(`/courses?${params.toString()}`);
       setCourses(response.data.content);
     } catch {
       toast.error('Failed to load courses');
@@ -76,7 +68,7 @@ const AssignmentsPage: React.FC = () => {
   const loadAllBatches = async () => {
     try {
       const params = new URLSearchParams({ page: '0', size: '200' });
-      const response = await apiClient.get<PageResponse<Batch>>(`/batches?${params.toString()}`);
+      const response = await apiClient.get(`/batches?${params.toString()}`);
       setBatches(response.data.content);
     } catch {
       toast.error('Failed to load batches');
@@ -94,7 +86,7 @@ const AssignmentsPage: React.FC = () => {
       if (selectedBatchId) {
         params.append('batchId', selectedBatchId);
       }
-      const response = await apiClient.get<PageResponse<Assignment>>(
+      const response = await apiClient.get(
         `/assignments?${params.toString()}`
       );
       setAssignments(response.data.content);
@@ -121,7 +113,7 @@ const AssignmentsPage: React.FC = () => {
     });
   };
 
-  const handleEdit = (assignment: Assignment) => {
+  const handleEdit = (assignment) => {
     setForm({
       id: assignment.id,
       batchId: assignment.batchId,
@@ -133,7 +125,7 @@ const AssignmentsPage: React.FC = () => {
     });
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this assignment?')) return;
     try {
       await apiClient.delete(`/assignments/${id}`);
@@ -144,7 +136,7 @@ const AssignmentsPage: React.FC = () => {
     }
   };
 
-  const handleSubmitForm = async (e: React.FormEvent) => {
+  const handleSubmitForm = async (e) => {
     e.preventDefault();
     if (!form.batchId) {
       toast.error('Batch is required');
@@ -180,13 +172,13 @@ const AssignmentsPage: React.FC = () => {
     }
   };
 
-  const openSubmitModal = (assignment: Assignment) => {
+  const openSubmitModal = (assignment) => {
     setSubmitModal({ open: true, assignment });
     setSubmitContent('');
     setSubmitFile(null);
   };
 
-  const handleSubmitAssignment = async (e: React.FormEvent) => {
+  const handleSubmitAssignment = async (e) => {
     e.preventDefault();
     if (!submitModal.assignment) return;
     setSubmitting(true);
@@ -213,7 +205,7 @@ const AssignmentsPage: React.FC = () => {
     }
   };
 
-  const loadAssignmentSubmissions = async (assignmentId: string, pageToLoad: number) => {
+  const loadAssignmentSubmissions = async (assignmentId, pageToLoad) => {
     setSubmissionsLoading(true);
     try {
       const params = new URLSearchParams({
@@ -221,7 +213,7 @@ const AssignmentsPage: React.FC = () => {
         size: '20',
         sort: 'submittedAt,desc',
       });
-      const response = await apiClient.get<PageResponse<Submission>>(
+      const response = await apiClient.get(
         `/assignments/${assignmentId}/submissions?${params.toString()}`
       );
       setSubmissions(response.data.content);
@@ -233,7 +225,7 @@ const AssignmentsPage: React.FC = () => {
     }
   };
 
-  const openSubmissionsModal = async (assignment: Assignment) => {
+  const openSubmissionsModal = async (assignment) => {
     setSubmissionsModal({ open: true, assignment });
     setSubmissions([]);
     setSubmissionsPage(0);
@@ -248,7 +240,7 @@ const AssignmentsPage: React.FC = () => {
     setSubmissionsTotalPages(0);
   };
 
-  const getFilenameFromContentDisposition = (headerValue?: string) => {
+  const getFilenameFromContentDisposition = (headerValue) => {
     if (!headerValue) return null;
     const match = /filename="([^"]+)"/i.exec(headerValue);
     if (!match?.[1]) return null;
@@ -259,7 +251,7 @@ const AssignmentsPage: React.FC = () => {
     }
   };
 
-  const downloadSubmissionFile = async (submission: Submission) => {
+  const downloadSubmissionFile = async (submission) => {
     if (!submission.filePath) {
       toast.error('No file attached for this submission');
       return;
@@ -270,7 +262,7 @@ const AssignmentsPage: React.FC = () => {
         responseType: 'blob',
       });
 
-      const contentDisposition = (response.headers?.['content-disposition'] as string | undefined) ?? undefined;
+      const contentDisposition = response.headers?.['content-disposition'];
       const filename =
         getFilenameFromContentDisposition(contentDisposition) ??
         `${submission.assignmentTitle}-${submission.studentName}-attempt${submission.submissionNumber}.bin`;
@@ -602,7 +594,7 @@ const AssignmentsPage: React.FC = () => {
                   onClick={async () => {
                     const next = Math.max(0, submissionsPage - 1);
                     setSubmissionsPage(next);
-                    await loadAssignmentSubmissions(submissionsModal.assignment!.id, next);
+                    await loadAssignmentSubmissions(submissionsModal.assignment.id, next);
                   }}
                   disabled={submissionsPage === 0 || submissionsLoading}
                   className="ui-btn-secondary ui-btn-sm"
@@ -613,7 +605,7 @@ const AssignmentsPage: React.FC = () => {
                   onClick={async () => {
                     const next = submissionsPage + 1;
                     setSubmissionsPage(next);
-                    await loadAssignmentSubmissions(submissionsModal.assignment!.id, next);
+                    await loadAssignmentSubmissions(submissionsModal.assignment.id, next);
                   }}
                   disabled={submissionsPage >= submissionsTotalPages - 1 || submissionsLoading}
                   className="ui-btn-secondary ui-btn-sm"

@@ -1,4 +1,4 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import axios from 'axios';
 import toast from 'react-hot-toast';
 
 const apiClient = axios.create({
@@ -9,9 +9,9 @@ const apiClient = axios.create({
   },
 });
 
-let refreshPromise: Promise<string> | null = null;
+let refreshPromise = null;
 
-const isAuthEndpoint = (url?: string) => {
+const isAuthEndpoint = (url) => {
   if (!url) return false;
   // Axios config.url is the path passed to apiClient (e.g. "/auth/login")
   return (
@@ -24,7 +24,7 @@ const isAuthEndpoint = (url?: string) => {
 };
 
 apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
+  (config) => {
     const token = localStorage.getItem('accessToken');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -38,8 +38,8 @@ apiClient.interceptors.request.use(
 
 apiClient.interceptors.response.use(
   (response) => response,
-  async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+  async (error) => {
+    const originalRequest = error.config ?? {};
 
     // Don't attempt refresh token flow for auth endpoints (especially /auth/login),
     // otherwise invalid credentials can look like "nothing happened" due to a redirect loop.
@@ -81,7 +81,7 @@ apiClient.interceptors.response.use(
       } else if (error.response?.status && error.response.status >= 500) {
         toast.error('Server error. Please try again later.');
       } else if (error.response?.data && typeof error.response.data === 'object' && 'message' in error.response.data) {
-        toast.error((error.response.data as { message: string }).message);
+        toast.error(error.response.data.message);
       }
     }
 
